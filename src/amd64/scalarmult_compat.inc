@@ -138,6 +138,7 @@ mov    qword ptr [rsp+280], 0
 
 ;# Montgomery ladder loop
 
+ALIGN 16
 loop_byte:
 
 ;# rsi = private key address
@@ -178,6 +179,7 @@ mov    byte ptr [rsp+354], cl
 ;# Z3 ← Z3 · X1
 ;#
 
+ALIGN 16
 loop_bit:
 
 ;# X2
@@ -220,7 +222,7 @@ sub    rax, qword ptr [rsp+224]
 sbb    rbx, qword ptr [rsp+232]
 sbb    rbp, qword ptr [rsp+240]
 sbb    rsi, qword ptr [rsp+248]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
@@ -251,7 +253,7 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
@@ -270,7 +272,7 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
@@ -288,9 +290,9 @@ mov    qword ptr [rsp+120], rsi
 mov    rax, qword ptr [rsp+40]
 mul    qword ptr [rsp+88]
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 mov    rax, qword ptr [rsp+48]
 mul    qword ptr [rsp+80]
 add    r8, rax
@@ -308,7 +310,7 @@ mul    qword ptr [rsp+88]
 add    r10, rax
 adc    r11, 0
 mov    r12, rdx
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, qword ptr [rsp+56]
 mul    qword ptr [rsp+80]
 add    r10, rax
@@ -420,9 +422,9 @@ mov    qword ptr [rsp+280], r14
 mov    rax, qword ptr [rsp+8]
 mul    qword ptr [rsp+120]
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 mov    rax, qword ptr [rsp+16]
 mul    qword ptr [rsp+112]
 add    r8, rax
@@ -440,7 +442,7 @@ mul    qword ptr [rsp+120]
 add    r10, rax
 adc    r11, 0
 mov    r12, rdx
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, qword ptr [rsp+24]
 mul    qword ptr [rsp+112]
 add    r10, rax
@@ -593,7 +595,7 @@ cmove  rsi, r15
 mov    rax, rsi
 mul    rsi
 mov    r12, rax
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, 38
 mul    rdx
 mov    r14, rax
@@ -601,9 +603,9 @@ mov    r15, rdx
 mov    rax, rbp
 mul    rsi
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 add    r8, rax
 adc    r9, 0
 add    r10, rdx
@@ -717,7 +719,7 @@ mov    rsi, qword ptr [rsp+24]
 mov    rax, rsi
 mul    rsi
 mov    r12, rax
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, 38
 mul    rdx
 mov    r14, rax
@@ -725,9 +727,9 @@ mov    r15, rdx
 mov    rax, rbp
 mul    rsi
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 add    r8, rax
 adc    r9, 0
 add    r10, rdx
@@ -850,7 +852,7 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    rax, 0
+mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 add    r8, rdx
@@ -869,7 +871,7 @@ sub    rbx, qword ptr [rsp+256]
 sbb    rbp, qword ptr [rsp+264]
 sbb    rcx, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    rax, 0
+mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 sub    rbx, rdx
@@ -883,7 +885,7 @@ sub    rbx, rax
 mov    rax, rsi
 mul    rsi
 mov    r12, rax
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, 38
 mul    rdx
 mov    r14, rax
@@ -891,9 +893,9 @@ mov    r15, rdx
 mov    rax, rbp
 mul    rsi
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 add    r8, rax
 adc    r9, 0
 add    r10, rdx
@@ -1007,7 +1009,7 @@ mov    rsi, qword ptr [rsp+216]
 mov    rax, rsi
 mul    rsi
 mov    r12, rax
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, 38
 mul    rdx
 mov    r14, rax
@@ -1015,9 +1017,9 @@ mov    r15, rdx
 mov    rax, rbp
 mul    rsi
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 add    r8, rax
 adc    r9, 0
 add    r10, rdx
@@ -1134,7 +1136,7 @@ sub    rbx, qword ptr [rsp+32]
 sbb    rbp, qword ptr [rsp+40]
 sbb    rcx, qword ptr [rsp+48]
 sbb    rsi, qword ptr [rsp+56]
-mov    rax, 0
+mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 sub    rbx, rdx
@@ -1162,7 +1164,7 @@ mov    rax, rdi
 mul    rcx
 mov    rcx, rax
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 mov    rax, rdi
 mul    rsi
 mov    rsi, rax
@@ -1183,7 +1185,7 @@ add    rbx, qword ptr [rsp+32]
 adc    rbp, qword ptr [rsp+40]
 adc    rcx, qword ptr [rsp+48]
 adc    rsi, qword ptr [rsp+56]
-mov    rax, 0
+mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 add    rbx, rdx
@@ -1201,9 +1203,9 @@ mov    qword ptr [rsp+120], rsi
 mov    rax, qword ptr [rsp+8]
 mul    qword ptr [rsp+56]
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 mov    rax, qword ptr [rsp+16]
 mul    qword ptr [rsp+48]
 add    r8, rax
@@ -1221,7 +1223,7 @@ mul    qword ptr [rsp+56]
 add    r10, rax
 adc    r11, 0
 mov    r12, rdx
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, qword ptr [rsp+24]
 mul    qword ptr [rsp+48]
 add    r10, rax
@@ -1335,9 +1337,9 @@ mov    qword ptr [rsp+184], r14
 mov    rax, qword ptr [rsp+72]
 mul    qword ptr [rsp+120]
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 mov    rax, qword ptr [rsp+80]
 mul    qword ptr [rsp+112]
 add    r8, rax
@@ -1355,7 +1357,7 @@ mul    qword ptr [rsp+120]
 add    r10, rax
 adc    r11, 0
 mov    r12, rdx
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, qword ptr [rsp+88]
 mul    qword ptr [rsp+112]
 add    r10, rax
@@ -1469,9 +1471,9 @@ mov    qword ptr [rsp+248], r14
 mov    rax, qword ptr [rsp+136]
 mul    qword ptr [rsp+280]
 mov    r8, rax
-xor    r9, r9
+xor    r9d, r9d
 mov    r10, rdx
-xor    r11, r11
+xor    r11d, r11d
 mov    rax, qword ptr [rsp+144]
 mul    qword ptr [rsp+272]
 add    r8, rax
@@ -1489,7 +1491,7 @@ mul    qword ptr [rsp+280]
 add    r10, rax
 adc    r11, 0
 mov    r12, rdx
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, qword ptr [rsp+152]
 mul    qword ptr [rsp+272]
 add    r10, rax
@@ -1665,7 +1667,7 @@ square_loop:
 mov    rax, r11
 mul    r11
 mov    r12, rax
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, 38
 mul    rdx
 mov    r14, rax
@@ -1674,9 +1676,9 @@ shl    r11, 1
 mov    rax, r9
 mul    r11
 mov    rbx, rax
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdi, rdx
-xor    rsi, rsi
+xor    esi, esi
 mov    rax, r10
 mul    r10
 add    rbx, rax
@@ -1817,7 +1819,7 @@ mul    qword ptr [rdi+24]
 add    r9, rax
 adc    rbp, 0
 mov    r10, rdx
-xor    r13, r13
+xor    r13d, r13d
 mov    rax, qword ptr [rbx+24]
 mul    qword ptr [rdi+16]
 add    r9, rax
@@ -1945,7 +1947,7 @@ jb    inv_loop
 
 ;# final reduction
 
-xor    r12, r12
+xor    r12d, r12d
 btr    r11, 63
 adc    r12, 0
 imul   r12, r12, 19

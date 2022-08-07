@@ -18,12 +18,14 @@
 
 #define REG_REL rip
 #define db .byte
+#define ALIGN .balign
 
 .global DECL(mx25519_scalarmult_amd64x)
 .global DECL(mx25519_scalarmult_amd64)
 
 #include "constants.inc"
 
+ALIGN 32
 DECL(mx25519_scalarmult_amd64x):
 #ifdef WINABI
   mov qword ptr [rsp+8], rdi
@@ -42,6 +44,7 @@ DECL(mx25519_scalarmult_amd64x):
 
   ret
 
+ALIGN 32
 DECL(mx25519_scalarmult_amd64):
 #ifdef WINABI
   mov qword ptr [rsp+8], rdi

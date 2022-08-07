@@ -138,6 +138,7 @@ mov    qword ptr [rsp+280], 0
 
 ;# Montgomery ladder loop
 
+ALIGN 16
 loop_byte_x:
 
 ;# rsi = private key address
@@ -178,6 +179,7 @@ mov    byte ptr [rsp+354], cl
 ;# Z3 ← Z3 · X1
 ;#
 
+ALIGN 16
 loop_bit_x:
 
 ;# X2
@@ -220,7 +222,7 @@ sub    rax, qword ptr [rsp+224]
 sbb    rbx, qword ptr [rsp+232]
 sbb    rbp, qword ptr [rsp+240]
 sbb    rsi, qword ptr [rsp+248]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
@@ -251,7 +253,7 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
@@ -270,7 +272,7 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
@@ -285,7 +287,7 @@ mov    qword ptr [rsp+112], rbp
 mov    qword ptr [rsp+120], rsi
 
 ;# Z3 ← T2 · T3
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+32]
 mulx   r9, r8, qword ptr [rsp+64]
 mulx   r10, rcx, qword ptr [rsp+72]
@@ -295,7 +297,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+88]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+40]
 mulx   rbp, rcx, qword ptr [rsp+64]
 adcx   r9, rcx
@@ -310,7 +312,7 @@ mulx   rbp, rcx, qword ptr [rsp+88]
 adcx   r12, rcx
 adox   r13, rbp
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+48]
 mulx   rbp, rcx, qword ptr [rsp+64]
 adcx   r10, rcx
@@ -325,7 +327,7 @@ mulx   rbp, rcx, qword ptr [rsp+88]
 adcx   r13, rcx
 adox   r14, rbp
 adcx   r14, r15
-xor    rax, rax
+xor    eax, eax
 mov    rdx, qword ptr [rsp+56]
 mulx   rbp, rcx, qword ptr [rsp+64]
 adcx   r11, rcx
@@ -340,7 +342,7 @@ mulx   rbp, rcx, qword ptr [rsp+88]
 adcx   r14, rcx
 adox   r15, rbp
 adcx   r15, rax
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdx, 38
 mulx   r12, rax, r12
 adcx   r8, rax
@@ -368,7 +370,7 @@ mov    qword ptr [rsp+272], r10
 mov    qword ptr [rsp+280], r11
 
 ;# X3 ← T1 · T4
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+0]
 mulx   r9, r8, qword ptr [rsp+96]
 mulx   r10, rcx, qword ptr [rsp+104]
@@ -378,7 +380,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+120]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+8]
 mulx   rbp, rcx, qword ptr [rsp+96]
 adcx   r9, rcx
@@ -393,7 +395,7 @@ mulx   rbp, rcx, qword ptr [rsp+120]
 adcx   r12, rcx
 adox   r13, rbp
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+16]
 mulx   rbp, rcx, qword ptr [rsp+96]
 adcx   r10, rcx
@@ -408,7 +410,7 @@ mulx   rbp, rcx, qword ptr [rsp+120]
 adcx   r13, rcx
 adox   r14, rbp
 adcx   r14, r15
-xor    rax, rax
+xor    eax, eax
 mov    rdx, qword ptr [rsp+24]
 mulx   rbp, rcx, qword ptr [rsp+96]
 adcx   r11, rcx
@@ -423,7 +425,7 @@ mulx   rbp, rcx, qword ptr [rsp+120]
 adcx   r14, rcx
 adox   r15, rbp
 adcx   r15, rax
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdx, 38
 mulx   r12, rax, r12
 adcx   r8, rax
@@ -492,7 +494,7 @@ cmove  rbp, r14
 cmove  rsi, r15
 
 ;# T2 ← T2^2
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, rax
 mulx   r10, r9, rbx
 mulx   r11, rcx, rbp
@@ -500,7 +502,7 @@ adcx   r10, rcx
 mulx   r12, rcx, rsi
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, rbx
 mulx   rdi, rcx, rbp
 adcx   r11, rcx
@@ -509,7 +511,7 @@ mulx   rdi, rcx, rsi
 adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, rbp
 mulx   r14, rcx, rsi
 adcx   r13, rcx
@@ -521,7 +523,7 @@ shld   r12, r11, 1
 shld   r11, r10, 1
 shld   r10, r9, 1
 shl    r9, 1
-xor    rdx, rdx
+xor    edx, edx
 mov    rdx, rax
 mulx   rdx, r8, rdx
 adcx   r9, rdx
@@ -537,7 +539,7 @@ mov    rdx, rsi
 mulx   rdx, rcx, rdx
 adcx   r14, rcx
 adcx   r15, rdx
-xor    rdi, rdi
+xor    edi, edi
 mov    rdx, 38
 mulx   rbp, rbx, r12
 adcx   rbx, r8
@@ -565,7 +567,7 @@ mov    qword ptr [rsp+48], rax
 mov    qword ptr [rsp+56], rsi
 
 ;# T1 ← T1^2
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+0]
 mulx   r10, r9, qword ptr [rsp+8]
 mulx   r11, rcx, qword ptr [rsp+16]
@@ -573,7 +575,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+24]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+8]
 mulx   rdi, rcx, qword ptr [rsp+16]
 adcx   r11, rcx
@@ -582,7 +584,7 @@ mulx   rdi, rcx, qword ptr [rsp+24]
 adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+16]
 mulx   r14, rcx, qword ptr [rsp+24]
 adcx   r13, rcx
@@ -594,7 +596,7 @@ shld   r12, r11, 1
 shld   r11, r10, 1
 shld   r10, r9, 1
 shl    r9, 1
-xor    rdx, rdx
+xor    edx, edx
 mov    rdx, qword ptr [rsp+0]
 mulx   rdx, r8, rdx
 adcx   r9, rdx
@@ -610,7 +612,7 @@ mov    rdx, qword ptr [rsp+24]
 mulx   rdx, rcx, rdx
 adcx   r14, rcx
 adcx   r15, rdx
-xor    rdi, rdi
+xor    edi, edi
 mov    rdx, 38
 mulx   rbp, rbx, r12
 adcx   rbx, r8
@@ -673,7 +675,7 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    rdi, 0
+mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
@@ -684,7 +686,7 @@ cmovb  rdi, rcx
 sub    rax, rdi
 
 ;# Z3 ← Z3^2
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, rax
 mulx   r10, r9, rbx
 mulx   r11, rcx, rbp
@@ -692,7 +694,7 @@ adcx   r10, rcx
 mulx   r12, rcx, rsi
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, rbx
 mulx   rdi, rcx, rbp
 adcx   r11, rcx
@@ -701,7 +703,7 @@ mulx   rdi, rcx, rsi
 adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, rbp
 mulx   r14, rcx, rsi
 adcx   r13, rcx
@@ -713,7 +715,7 @@ shld   r12, r11, 1
 shld   r11, r10, 1
 shld   r10, r9, 1
 shl    r9, 1
-xor    rdx, rdx
+xor    edx, edx
 mov    rdx, rax
 mulx   rdx, r8, rdx
 adcx   r9, rdx
@@ -729,7 +731,7 @@ mov    rdx, rsi
 mulx   rdx, rcx, rdx
 adcx   r14, rcx
 adcx   r15, rdx
-xor    rdi, rdi
+xor    edi, edi
 mov    rdx, 38
 mulx   rbp, rbx, r12
 adcx   rbx, r8
@@ -757,7 +759,7 @@ mov    qword ptr [rsp+272], rax
 mov    qword ptr [rsp+280], rsi
 
 ;# X3 ← X3^2
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+192]
 mulx   r10, r9, qword ptr [rsp+200]
 mulx   r11, rcx, qword ptr [rsp+208]
@@ -765,7 +767,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+216]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+200]
 mulx   rdi, rcx, qword ptr [rsp+208]
 adcx   r11, rcx
@@ -774,7 +776,7 @@ mulx   rdi, rcx, qword ptr [rsp+216]
 adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+208]
 mulx   r14, rcx, qword ptr [rsp+216]
 adcx   r13, rcx
@@ -786,7 +788,7 @@ shld   r12, r11, 1
 shld   r11, r10, 1
 shld   r10, r9, 1
 shl    r9, 1
-xor    rdx, rdx
+xor    edx, edx
 mov    rdx, qword ptr [rsp+192]
 mulx   rdx, r8, rdx
 adcx   r9, rdx
@@ -802,7 +804,7 @@ mov    rdx, qword ptr [rsp+216]
 mulx   rdx, rcx, rdx
 adcx   r14, rcx
 adcx   r15, rdx
-xor    rdi, rdi
+xor    edi, edi
 mov    rdx, 38
 mulx   rbp, rbx, r12
 adcx   rbx, r8
@@ -840,7 +842,7 @@ sub    rax, qword ptr [rsp+32]
 sbb    rbx, qword ptr [rsp+40]
 sbb    rsi, qword ptr [rsp+48]
 sbb    rdi, qword ptr [rsp+56]
-mov    rbp, 0
+mov    ebp, 0
 mov    rcx, 38
 cmovae rcx, rbp
 sub    rax, rcx
@@ -855,7 +857,7 @@ mov    qword ptr [rsp+80], rsi
 mov    qword ptr [rsp+88], rdi
 
 ;# T4 ← ((A + 2)/4) · T3
-xor    r12, r12
+xor    r12d, r12d
 mov    rdx, 121666
 mulx   rbp, rax, rax
 mulx   rcx, rbx, rbx
@@ -878,7 +880,7 @@ add    rax, qword ptr [rsp+32]
 adc    rbx, qword ptr [rsp+40]
 adc    rsi, qword ptr [rsp+48]
 adc    rdi, qword ptr [rsp+56]
-mov    rbp, 0
+mov    ebp, 0
 mov    rcx, 38
 cmovae rcx, rbp
 add    rax, rcx
@@ -893,7 +895,7 @@ mov    qword ptr [rsp+112], rsi
 mov    qword ptr [rsp+120], rdi
 
 ;# X2 ← T1 · T2
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+0]
 mulx   r9, r8, qword ptr [rsp+32]
 mulx   r10, rcx, qword ptr [rsp+40]
@@ -903,7 +905,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+56]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+8]
 mulx   rbp, rcx, qword ptr [rsp+32]
 adcx   r9, rcx
@@ -918,7 +920,7 @@ mulx   rbp, rcx, qword ptr [rsp+56]
 adcx   r12, rcx
 adox   r13, rbp
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+16]
 mulx   rbp, rcx, qword ptr [rsp+32]
 adcx   r10, rcx
@@ -933,7 +935,7 @@ mulx   rbp, rcx, qword ptr [rsp+56]
 adcx   r13, rcx
 adox   r14, rbp
 adcx   r14, r15
-xor    rax, rax
+xor    eax, eax
 mov    rdx, qword ptr [rsp+24]
 mulx   rbp, rcx, qword ptr [rsp+32]
 adcx   r11, rcx
@@ -948,7 +950,7 @@ mulx   rbp, rcx, qword ptr [rsp+56]
 adcx   r14, rcx
 adox   r15, rbp
 adcx   r15, rax
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdx, 38
 mulx   r12, rax, r12
 adcx   r8, rax
@@ -978,7 +980,7 @@ mov    qword ptr [rsp+176], r10
 mov    qword ptr [rsp+184], r11
 
 ;# Z2 ← T3 · T4
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+96]
 mulx   r9, r8, qword ptr [rsp+64]
 mulx   r10, rcx, qword ptr [rsp+72]
@@ -988,7 +990,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+88]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+104]
 mulx   rbp, rcx, qword ptr [rsp+64]
 adcx   r9, rcx
@@ -1003,7 +1005,7 @@ mulx   rbp, rcx, qword ptr [rsp+88]
 adcx   r12, rcx
 adox   r13, rbp
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+112]
 mulx   rbp, rcx, qword ptr [rsp+64]
 adcx   r10, rcx
@@ -1018,7 +1020,7 @@ mulx   rbp, rcx, qword ptr [rsp+88]
 adcx   r13, rcx
 adox   r14, rbp
 adcx   r14, r15
-xor    rax, rax
+xor    eax, eax
 mov    rdx, qword ptr [rsp+120]
 mulx   rbp, rcx, qword ptr [rsp+64]
 adcx   r11, rcx
@@ -1033,7 +1035,7 @@ mulx   rbp, rcx, qword ptr [rsp+88]
 adcx   r14, rcx
 adox   r15, rbp
 adcx   r15, rax
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdx, 38
 mulx   r12, rax, r12
 adcx   r8, rax
@@ -1063,7 +1065,7 @@ mov    qword ptr [rsp+240], r10
 mov    qword ptr [rsp+248], r11
 
 ;# Z3 ← Z3 · X1
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rsp+256]
 mulx   r9, r8, qword ptr [rsp+128]
 mulx   r10, rcx, qword ptr [rsp+136]
@@ -1073,7 +1075,7 @@ adcx   r10, rcx
 mulx   r12, rcx, qword ptr [rsp+152]
 adcx   r11, rcx
 adcx   r12, r13
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rsp+264]
 mulx   rbp, rcx, qword ptr [rsp+128]
 adcx   r9, rcx
@@ -1088,7 +1090,7 @@ mulx   rbp, rcx, qword ptr [rsp+152]
 adcx   r12, rcx
 adox   r13, rbp
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rsp+272]
 mulx   rbp, rcx, qword ptr [rsp+128]
 adcx   r10, rcx
@@ -1103,7 +1105,7 @@ mulx   rbp, rcx, qword ptr [rsp+152]
 adcx   r13, rcx
 adox   r14, rbp
 adcx   r14, r15
-xor    rax, rax
+xor    eax, eax
 mov    rdx, qword ptr [rsp+280]
 mulx   rbp, rcx, qword ptr [rsp+128]
 adcx   r11, rcx
@@ -1118,7 +1120,7 @@ mulx   rbp, rcx, qword ptr [rsp+152]
 adcx   r14, rcx
 adox   r15, rbp
 adcx   r15, rax
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdx, 38
 mulx   r12, rax, r12
 adcx   r8, rax
@@ -1150,7 +1152,7 @@ mov    qword ptr [rsp+280], r11
 movzx  ecx, byte ptr [rsp+352]
 sub    ecx, 1
 mov    byte ptr [rsp+352], cl
-;cmp    cl, 0
+;# cmp    cl, 0
 jge    loop_bit_x
 
 mov    byte ptr [rsp+352], 7
@@ -1158,7 +1160,7 @@ lea    rsi, [rsp+360]
 mov    eax, dword ptr [rsp+356]
 sub    eax, 1
 mov    dword ptr [rsp+356], eax
-;cmp    eax, 0
+;# cmp    eax, 0
 jge    loop_byte_x
 
 ;# remove the private key from the stack
@@ -1210,7 +1212,7 @@ test   cl, cl
 jz     skip_square_x
 
 square_loop_x:
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, r8
 mulx   rax, rbp, r9
 mulx   rsi, rdi, r10
@@ -1219,7 +1221,7 @@ mulx   r12, rdi, r11
 adcx   rsi, rdi
 adcx   r12, r13
 mov    rdx, r9
-xor    r14, r14
+xor    r14d, r14d
 mulx   rdx, rdi, r10
 adcx   rsi, rdi
 adox   r12, rdx
@@ -1228,7 +1230,7 @@ mulx   rdx, rdi, r11
 adcx   r12, rdi
 adox   r13, rdx
 adcx   r13, r14
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, r10
 mulx   r14, rdi, r11
 adcx   r13, rdi
@@ -1240,7 +1242,7 @@ shld   r12, rsi, 1
 shld   rsi, rax, 1
 shld   rax, rbp, 1
 shl    rbp, 1
-xor    rdx, rdx
+xor    edx, edx
 mov    rdx, r8
 mulx   rdx, rbx, rdx
 adcx   rbp, rdx
@@ -1256,10 +1258,10 @@ mov    rdx, r11
 mulx   rdx, rdi, rdx
 adcx   r14, rdi
 adcx   r15, rdx
-;xor    r9, r9
+;# xor    r9d, r9d
 mov    rdx, 38
 mulx   r9, r8, r12
-xor    r12, r12
+xor    r12d, r12d
 adcx   r8, rbx
 adox   r9, rbp
 mulx   r10, rdi, r13
@@ -1299,7 +1301,7 @@ shl    edi, 5
 add    rdi, rsp
 
 ;# result ← T4 · mul_source
-xor    r13, r13
+xor    r13d, r13d
 mov    rdx, qword ptr [rbx]
 mulx   r9, r8, qword ptr [rdi]
 mulx   r10, rsi, qword ptr [rdi+8]
@@ -1309,7 +1311,7 @@ adcx   r10, rsi
 mulx   r12, rsi, qword ptr [rdi+24]
 adcx   r11, rsi
 adcx   r12, r13 ;# zero
-xor    r14, r14
+xor    r14d, r14d
 mov    rdx, qword ptr [rbx+8]
 mulx   rbp, rsi, qword ptr [rdi]
 adcx   r9, rsi
@@ -1324,7 +1326,7 @@ mulx   rbp, rsi, qword ptr [rdi+24]
 adcx   r12, rsi
 adox   r13, rbp
 adcx   r13, r14 ;#zero
-xor    r15, r15
+xor    r15d, r15d
 mov    rdx, qword ptr [rbx+16]
 mulx   rbp, rsi, qword ptr [rdi]
 adcx   r10, rsi
@@ -1339,7 +1341,7 @@ mulx   rbp, rsi, qword ptr [rdi+24]
 adcx   r13, rsi
 adox   r14, rbp
 adcx   r14, r15
-xor    rax, rax
+xor    eax, eax
 mov    rdx, qword ptr [rbx+24]
 mulx   rbp, rsi, qword ptr [rdi]
 adcx   r11, rsi
@@ -1354,7 +1356,7 @@ mulx   rbp, rsi, qword ptr [rdi+24]
 adcx   r14, rsi
 adox   r15, rbp
 adcx   r15, rax ;# zero
-xor    rbp, rbp
+xor    ebp, ebp
 mov    rdx, 38
 mulx   r12, rax, r12
 adcx   r8, rax
@@ -1401,7 +1403,7 @@ jb    inv_loop_x
 
 ;# final reduction
 
-xor    r12, r12
+xor    r12d, r12d
 btr    r11, 63
 adc    r12, 0
 imul   r12, r12, 19
