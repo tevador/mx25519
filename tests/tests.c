@@ -225,7 +225,7 @@ static bool test_scmul3_arm64() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul(rfc7748_alice_priv, test_pt3, rfc7748_alice_pub));
+    assert(check_scmul(test_sc3, test_pt3, test_re3));
     return true;
 }
 
@@ -279,7 +279,7 @@ static bool test_scmul3_amd64() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul(rfc7748_alice_priv, test_pt3, rfc7748_alice_pub));
+    assert(check_scmul(test_sc3, test_pt3, test_re3));
     return true;
 }
 
@@ -333,7 +333,7 @@ static bool test_scmul3_amd64x() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul(rfc7748_alice_priv, test_pt3, rfc7748_alice_pub));
+    assert(check_scmul(test_sc3, test_pt3, test_re3));
     return true;
 }
 
