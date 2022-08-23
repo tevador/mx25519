@@ -88,7 +88,7 @@ void mx25519_scmul_base(const mx25519_impl* impl, mx25519_pubkey* result,
     impl->scmul(result->v, key->v, x25519_base.v);
 }
 
-void mx25519_scmul(const mx25519_impl* impl, mx25519_pubkey* result,
+void mx25519_scmul_key(const mx25519_impl* impl, mx25519_pubkey* result,
     const mx25519_privkey* key, const mx25519_pubkey* pt)
 {
     assert(impl != NULL);

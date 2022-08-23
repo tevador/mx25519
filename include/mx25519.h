@@ -111,7 +111,7 @@ MX25519_API void mx25519_scmul_base(const mx25519_impl* impl,
  * @param key is a pointer to the private key. Must not be NULL.
  * @param p is a pointer to the base point P. Must not be NULL.
  */
-MX25519_API void mx25519_scmul(const mx25519_impl* impl, mx25519_pubkey* result,
+MX25519_API void mx25519_scmul_key(const mx25519_impl* impl, mx25519_pubkey* result,
     const mx25519_privkey* key, const mx25519_pubkey* p);
 
 /*

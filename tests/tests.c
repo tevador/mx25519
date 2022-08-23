@@ -95,7 +95,7 @@ static bool check_scmul(const char* key_hex, const char* pt_hex, const char* res
     mx25519_pubkey pt;
     load_key(pt, pt_hex);
     mx25519_pubkey res;
-    mx25519_scmul(impl , &res, &key, &pt);
+    mx25519_scmul_key(impl , &res, &key, &pt);
     return equals_hex(res.v, res_hex);
 }
 
@@ -110,9 +110,9 @@ static void check_dh() {
     mx25519_scmul_base(impl, &bob_pub, &bob_priv);
     assert(equals_hex(&bob_pub, rfc7748_bob_pub));
     mx25519_pubkey alice_shared, bob_shared;
-    mx25519_scmul(impl, &alice_shared, &alice_priv, &bob_pub);
+    mx25519_scmul_key(impl, &alice_shared, &alice_priv, &bob_pub);
     assert(equals_hex(&alice_shared, rfc7748_shared));
-    mx25519_scmul(impl, &bob_shared, &bob_priv, &alice_pub);
+    mx25519_scmul_key(impl, &bob_shared, &bob_priv, &alice_pub);
     assert(equals_hex(&bob_shared, rfc7748_shared));
 }
 
@@ -166,7 +166,7 @@ static bool test_invert1() {
     assert(equals_hex(&invkey, inv_1));
     mx25519_pubkey res;
     load_key(res, inv_pubkey);
-    mx25519_scmul(impl, &res, &invkey, &res);
+    mx25519_scmul_key(impl, &res, &invkey, &res);
     assert(equals_hex(&res, inv_pubkey));
     return true;
 }
@@ -179,13 +179,13 @@ static bool test_invert2() {
     load_key(keys[2], inv_priv3);
     mx25519_pubkey res;
     load_key(res, inv_pubkey);
-    mx25519_scmul(impl, &res, &keys[0], &res);
-    mx25519_scmul(impl, &res, &keys[1], &res);
-    mx25519_scmul(impl, &res, &keys[2], &res);
+    mx25519_scmul_key(impl, &res, &keys[0], &res);
+    mx25519_scmul_key(impl, &res, &keys[1], &res);
+    mx25519_scmul_key(impl, &res, &keys[2], &res);
     mx25519_privkey invkey;
     int fail = mx25519_invkey(&invkey, keys, NUM_KEYS);
     assert(!fail);
-    mx25519_scmul(impl, &res, &invkey, &res);
+    mx25519_scmul_key(impl, &res, &invkey, &res);
     assert(equals_hex(&res, inv_pubkey));
 #undef NUM_KEYS
     return true;
