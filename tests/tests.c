@@ -83,7 +83,7 @@ static inline void hex2bin(const char* in, int length, uint8_t* out) {
 #define load_key(key, hex) hex2bin(hex, 2 * KEY_SIZE, key.v)
 
 static inline bool equals_hex(const void* val, const char* hex) {
-    char reference[KEY_SIZE];
+    unsigned char reference[KEY_SIZE];
     hex2bin(hex, 2 * KEY_SIZE, reference);
     return memcmp(val, reference, sizeof(reference)) == 0;
 }
