@@ -55,6 +55,8 @@ if(ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "armv
   set_property(SOURCE src/arm64/scalarmult.s PROPERTY XCODE_EXPLICIT_FILE_TYPE sourcecode.asm)
 endif()
 
+set(MX25519_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE STRING "mx25519 include path")
+
 add_library(mx25519 SHARED ${mx25519_sources})
 set_property(TARGET mx25519 PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET mx25519 PROPERTY PUBLIC_HEADER include/mx25519.h)
