@@ -105,9 +105,9 @@ static FORCE_INLINE void platform_store64(void* dst, uint64_t w) {
 }
 
 /* current value of a hardware timer */
-uint64_t mx25519_cpu_cycles();
+uint64_t mx25519_cpu_cycles(void);
 
 /* time in seconds from a fixed point in the past */
-double mx25519_wall_clock();
+double mx25519_wall_clock(void);
 
 #endif

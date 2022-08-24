@@ -49,7 +49,7 @@ static bool impl_supported(mx25519_type impl) {
     return false;
 }
 
-static mx25519_type select_best_impl() {
+static mx25519_type select_best_impl(void) {
 #if defined(PLATFORM_AMD64)
     if (impl_supported(MX25519_TYPE_AMD64X)) {
         return MX25519_TYPE_AMD64X;
@@ -57,8 +57,9 @@ static mx25519_type select_best_impl() {
     return MX25519_TYPE_AMD64;
 #elif defined(PLATFORM_ARM64)
     return MX25519_TYPE_ARM64;
-#endif
+#else
     return MX25519_TYPE_PORTABLE;
+#endif
 }
 
 const mx25519_impl* mx25519_select_impl(mx25519_type type)

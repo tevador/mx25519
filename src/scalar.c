@@ -17,12 +17,6 @@ static const x25519_scalar group_order =
         0x1000000000000000, 0x0000000000000000,
         0x14DEF9DEA2F79CD6, 0x5812631A5CF5D3ED);
 
-/* just one */
-static const x25519_scalar scalar_one =
-    U256_CONST(
-        0, 0,
-        0, 1);
-
 /* the Montgomery form of 8 */
 const x25519_scalar_mont mx25519_sc8_mont =
     U256_CONST(
