@@ -37,7 +37,7 @@ double bench_impl(mx25519_type type) {
     uint64_t elapsed = 0;
     uint64_t start = mx25519_cpu_cycles();
     for (uint32_t i = 0; i < BENCH_LOOPS; ++i) {
-        mx25519_scmul(impl, &result, &test_key, &result);
+        mx25519_scmul_key(impl, &result, &test_key, &result);
     }
     uint64_t end = mx25519_cpu_cycles();
     elapsed += (end - start);
