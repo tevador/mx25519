@@ -16,7 +16,7 @@
 #include <assert.h>
 
 static const mx25519_pubkey x25519_base = {
-    .v = { 9 }
+    .data = { 9 }
 };
 
 static bool impl_supported(mx25519_type impl) {
@@ -86,7 +86,7 @@ void mx25519_scmul_base(const mx25519_impl* impl, mx25519_pubkey* result,
     assert(impl != NULL);
     assert(key != NULL);
     assert(result != NULL);
-    impl->scmul(result->v, key->v, x25519_base.v);
+    impl->scmul(result->data, key->data, x25519_base.data);
 }
 
 void mx25519_scmul_key(const mx25519_impl* impl, mx25519_pubkey* result,
@@ -96,7 +96,7 @@ void mx25519_scmul_key(const mx25519_impl* impl, mx25519_pubkey* result,
     assert(pt != NULL);
     assert(key != NULL);
     assert(result != NULL);
-    impl->scmul(result->v, key->v, pt->v);
+    impl->scmul(result->data, key->data, pt->data);
 }
 
 int mx25519_invkey(mx25519_privkey* invkey, const mx25519_privkey keys[],
@@ -111,7 +111,7 @@ int mx25519_invkey(mx25519_privkey* invkey, const mx25519_privkey keys[],
     for (size_t i = 0; i < num_keys; ++i) {
         x25519_scalar key_sc;
         x25519_scalar_mont key_mont;
-        mx25519_scalar_unpack(&key_sc, keys[i].v);
+        mx25519_scalar_unpack(&key_sc, keys[i].data);
         key_sc.v[0] &= 0xfffffffffffffff8;
         key_sc.v[3] &= 0x7fffffffffffffff;
         mx25519_scalar_to_mont(&key_mont, &key_sc);
@@ -132,6 +132,6 @@ int mx25519_invkey(mx25519_privkey* invkey, const mx25519_privkey keys[],
     /* shift left by 3 bits */
     mx25519_scalar_lsh3(&res);
 
-    mx25519_scalar_pack(invkey->v, &res);
+    mx25519_scalar_pack(invkey->data, &res);
     return 0;
 }

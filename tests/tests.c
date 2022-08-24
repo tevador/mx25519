@@ -80,7 +80,7 @@ static inline void hex2bin(const char* in, int length, uint8_t* out) {
 }
 
 #define KEY_SIZE 32
-#define load_key(key, hex) hex2bin(hex, 2 * KEY_SIZE, key.v)
+#define load_key(key, hex) hex2bin(hex, 2 * KEY_SIZE, key.data)
 
 static inline bool equals_hex(const void* val, const char* hex) {
     unsigned char reference[KEY_SIZE];
@@ -96,7 +96,7 @@ static bool check_scmul(const char* key_hex, const char* pt_hex, const char* res
     load_key(pt, pt_hex);
     mx25519_pubkey res;
     mx25519_scmul_key(impl , &res, &key, &pt);
-    return equals_hex(res.v, res_hex);
+    return equals_hex(res.data, res_hex);
 }
 
 static void check_dh() {

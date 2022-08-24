@@ -19,14 +19,14 @@
  * keys, which might have a zero bit in that position.
  */
 typedef struct mx25519_privkey {
-    uint8_t v[32];
+    uint8_t data[32];
 } mx25519_privkey;
 
 /*
  * X25519 X-coordinate (public key).
  */
 typedef struct mx25519_pubkey {
-    uint8_t v[32];
+    uint8_t data[32];
 } mx25519_pubkey;
 
 /*
