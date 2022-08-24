@@ -27,14 +27,14 @@ uint64_t mx25519_cpu_cycles() {
 		return __rdtscp(&aux);
 #else
 		uint64_t lo, hi;
-		asm volatile("rdtscp" : "=a"(lo), "=d"(hi) : : "%ecx");
+		__asm__ volatile("rdtscp" : "=a"(lo), "=d"(hi) : : "%ecx");
 		return (hi << 32) | lo;
 #endif
 	}
 #endif
 #if defined(PLATFORM_ARM64)
     uint64_t vct;
-    asm volatile("mrs %0, cntvct_el0" : "=r"(vct));
+    __asm__ volatile("mrs %0, cntvct_el0" : "=r"(vct));
     return vct;
 #endif
 	return clock(); /* fallback */
