@@ -26,9 +26,9 @@ uint64_t mx25519_cpu_cycles() {
         uint32_t aux;
         return __rdtscp(&aux);
 #else
-        uint64_t lo, hi;
+        uint32_t lo, hi;
         __asm__ volatile("rdtscp" : "=a"(lo), "=d"(hi) : : "%ecx");
-        return (hi << 32) | lo;
+        return ((uint64_t)hi << 32) | lo;
 #endif
     }
 #endif
