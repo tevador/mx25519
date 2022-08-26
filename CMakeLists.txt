@@ -50,9 +50,9 @@ endif()
 
 # ARM64
 if(ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "armv8-a")
-  list(APPEND mx25519_sources src/arm64/scalarmult.s)
-  set_property(SOURCE src/arm64/scalarmult.s PROPERTY LANGUAGE C)
-  set_property(SOURCE src/arm64/scalarmult.s PROPERTY XCODE_EXPLICIT_FILE_TYPE sourcecode.asm)
+  list(APPEND mx25519_sources src/arm64/scalarmult.S)
+  set_property(SOURCE src/arm64/scalarmult.S PROPERTY LANGUAGE C)
+  set_property(SOURCE src/arm64/scalarmult.S PROPERTY XCODE_EXPLICIT_FILE_TYPE sourcecode.asm)
 endif()
 
 set(MX25519_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE STRING "mx25519 include path")

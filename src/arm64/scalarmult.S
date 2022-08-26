@@ -1,3 +1,15 @@
+/* Copyright (c) 2021-2022 tevador <tevador@gmail.com>
+ *
+ * This file is part of mx25519, which is released under LGPLv3.
+ * See LICENSE for full license details.
+*/
+
+#if defined(__APPLE__)
+#define DECL(x) _##x
+#else
+#define DECL(x) x
+#endif
+
 /* X25519-AArch64 by Emil Lenngren (2018)
  *
  * To the extent possible under law, the person who associated CC0 with
@@ -7,7 +19,7 @@
  * You should have received a copy of the CC0 legalcode along with this
  * work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
- 
+
 /*
  * This is an AArch64 implementation of X25519.
  * It follows the reference implementation where the representation of
@@ -22,10 +34,10 @@
 .cpu generic+fp+simd
 	.text
 	.align	2
-	
+
 	// in: x0: pointer
 	// out: x0: loaded value
-	.type	load64unaligned, %function
+	//.type	load64unaligned, %function
 load64unaligned:
 	ldrb w1, [x0]
 	ldrb w2, [x0, #1]
@@ -35,29 +47,29 @@ load64unaligned:
 	ldrb w6, [x0, #5]
 	ldrb w7, [x0, #6]
 	ldrb w8, [x0, #7]
-	
+
 	orr	w1, w1, w2, lsl #8
 	orr	w3, w3, w4, lsl #8
 	orr	w5, w5, w6, lsl #8
 	orr	w7, w7, w8, lsl #8
-	
+
 	orr	w1, w1, w3, lsl #16
 	orr	w5, w5, w7, lsl #16
-	
+
 	orr	x0, x1, x5, lsl #32
-	
+
 	ret
-	.size	load64unaligned, .-load64unaligned
+	//.size	load64unaligned, .-load64unaligned
 
 	// in: x0: pointer
 	// out: x0-x3: loaded value
-	.type	load256unaligned, %function
+	//.type	load256unaligned, %function
 load256unaligned:
 	stp	x29, x30, [sp, #-64]!
 	mov	x29, sp
 	stp	x19, x20, [sp, #16]
 	stp	x21, x22, [sp, #32]
-	
+
 	mov	x19, x0
 	bl	load64unaligned
 	mov	x20, x0
@@ -70,22 +82,22 @@ load256unaligned:
 	add	x0, x19, #24
 	bl	load64unaligned
 	mov	x3, x0
-	
+
 	mov	x0, x20
 	mov	x1, x21
 	mov	x2, x22
-	
+
 	ldp	x19, x20, [sp, #16]
 	ldp	x21, x22, [sp, #32]
 	ldp	x29, x30, [sp], #64
 	ret
-	.size load256unaligned, .-load256unaligned
+	//.size load256unaligned, .-load256unaligned
 
 	// in: x1: scalar pointer, x2: base point pointer
 	// out: x0: result pointer
-	.global	mx25519_scalarmult_arm64
-	.type	mx25519_scalarmult_arm64, %function
-mx25519_scalarmult_arm64:
+	.global	DECL(mx25519_scalarmult_arm64)
+	//.type	mx25519_scalarmult_arm64, %function
+DECL(mx25519_scalarmult_arm64):
 	stp	x29, x30, [sp, #-160]!
 	mov	x29, sp
 	stp	x19, x20, [sp, #16]
@@ -98,25 +110,25 @@ mx25519_scalarmult_arm64:
 	stp	d12, d13, [sp, #128]
 	stp	d14, d15, [sp, #144]
 	sub	sp, sp, 192
-	
+
 	// 0: mask1, 8: mask2, 16: AA, 56: B/BB, 96: counter, 100: lastbit, 104: scalar, 136: X1, 176: outptr, 184: padding, 192: fp, 200: lr
-	
+
 	str	x0, [sp, #176] // outptr
 	mov	x19, x2 // point
-	
+
 	mov	x0, x1 // scalar
 	bl	load256unaligned
-	
+
 	and	x3, x3, #0x7fffffffffffffff
 	and	x0, x0, #0xfffffffffffffff8
 	//orr	x3, x3, #0x4000000000000000 //do not set bit 254
-	
+
 	stp	x0, x1, [sp, #104]
 	stp	x2, x3, [sp, #104+16]
-	
+
 	mov	x0, x19 // point
 	bl	load256unaligned
-	
+
 	// Unpack point (discard most significant bit)
 	lsr	x12, x0, #51
 	lsr	x17, x2, #51
@@ -137,7 +149,7 @@ mx25519_scalarmult_arm64:
 	stp	w14, w15, [sp, #136+16]
 	stp	w16, w17, [sp, #136+24]
 	stp	w8, w9, [sp, #136+32]
-	
+
 	// X2 (initially set to 1)
 	mov	x1, #1
 	mov	v0.d[0], x1
@@ -145,14 +157,14 @@ mx25519_scalarmult_arm64:
 	mov	v4.d[0], xzr
 	mov	v6.d[0], xzr
 	mov	v8.d[0], xzr
-	
+
 	// Z2 (initially set to 0)
 	mov	v1.d[0], xzr
 	mov	v3.d[0], xzr
 	mov	v5.d[0], xzr
 	mov	v7.d[0], xzr
 	mov	v9.d[0], xzr
-	
+
 	// X3 (initially set to X1)
 	mov	v10.s[0], w10
 	mov	v10.s[1], w11
@@ -164,18 +176,18 @@ mx25519_scalarmult_arm64:
 	mov	v16.s[1], w17
 	mov	v18.s[0], w8
 	mov	v18.s[1], w9
-	
+
 	// Z3 (initially set to 1)
 	mov	v11.d[0], x1
 	mov	v13.d[0], xzr
 	mov	v15.d[0], xzr
 	mov	v17.d[0], xzr
 	mov	v19.d[0], xzr
-	
+
 	mov	x0,  #255-1 // 255 iterations
 	str	w0, [sp, #96]
-	
-	
+
+
 	mov	w30, #19
 	dup	v31.2s, w30
 	mov	x0, #(1<<26)-1
@@ -184,10 +196,10 @@ mx25519_scalarmult_arm64:
 	stp	x0, x0, [sp]
 	sub	x1, x0, #0xfc-0xb4
 	stp	x1, x0, [sp, #8]
-	
+
 	ldr	d28, [sp, #8]
 	ldr	d29, [sp]
-	
+
 	ldrb	w1, [sp, #135]
 	lsr	w1, w1, #6
 	str	w1, [sp, #100]
@@ -1157,7 +1169,7 @@ mov	v10.d[0], v0.d[1]
 
 	eor	w1, w1, w3
 
-	
+
 	// Make X4 and Z5 more compact
 	mov	v12.d[0], v1.d[1]
 	mov	v14.d[0], v2.d[1]
@@ -1198,35 +1210,35 @@ mov	v10.d[0], v0.d[1]
 	mov	w7, v7.s[1]
 	mov	w8, v9.s[0]
 	mov	w9, v9.s[1]
-	
+
 	stp	w0, w1, [sp, #80]
 	stp	w2, w3, [sp, #88]
 	stp	w4, w5, [sp, #96]
 	stp	w6, w7, [sp, #104]
 	stp	w8, w9, [sp, #112]
-	
+
 	mov	x10, v0.d[0]
 	mov	x11, v2.d[0]
 	mov	x12, v4.d[0]
 	mov	x13, v6.d[0]
 	mov	x14, v8.d[0]
-	
+
 	stp	x10, x11, [sp]
 	stp	x12, x13, [sp, #16]
 	str	x14, [sp, #32]
-	
+
 	adr	x10, invtable
 	str	x10, [sp, #160]
-	
+
 .Linvloopnext:
 	ldrh	w11, [x10], #2
 	mov	v20.s[0], w11
 	str	x10, [sp, #160]
-	
+
 	and	w12, w11, #0x7f
 	subs	w30, w12, #1 // square times
 	bmi	.Lskipsquare
-	
+
 	mov	w23, w3
 	mov	w24, w4
 	mov	w25, w5
@@ -1279,11 +1291,11 @@ mov	v10.d[0], v0.d[1]
 	umaddl	x27, w13, w4, x27
 		add	w3, w3, w15, lsl #4
 	umaddl	x28, w16, w9, x28
-		
+
 	umaddl	x19, w11, w8, x19
 		add	w9, w6, w6, lsl #1
 	umaddl	x20, w3, w5, x20
-		
+
 	umaddl	x24, w10, w4, x24
 		add	w9, w9, w6, lsl #4
 	umaddl	x25, w10, w5, x25
@@ -1303,7 +1315,7 @@ mov	v10.d[0], v0.d[1]
 	umaddl	x26, w11, w15, x26
 		add	w1, w17, w17, lsl #1
 	umaddl	x20, w9, w0, x20
-		
+
 	umaddl	x21, w9, w15, x21
 		add	w1, w1, w17, lsl #4
 	umaddl	x22, w9, w6, x22
@@ -1315,19 +1327,19 @@ mov	v10.d[0], v0.d[1]
 	umaddl	x22, w1, w15, x22
 		subs	w30, w30, #1
 	umaddl	x20, w10, w12, x20
-		
+
 	umaddl	x21, w10, w13, x21
-		
+
 	umaddl	x22, w10, w0, x22
 
 	umaddl	x20, w16, w11, x20
-		
+
 	umaddl	x21, w16, w2, x21
-		
+
 	umaddl	x22, w16, w13, x22
 		add	w11, w6, w6
 	umaddl	x23, w1, w6, x23
-		
+
 	umaddl	x24, w1, w7, x24
 		add	x21, x21, x20, lsr #26
 	umaddl	x26, w10, w8, x26
@@ -1348,7 +1360,7 @@ mov	v10.d[0], v0.d[1]
 		add	x23, x23, x22, lsr #26
 	umaddl	x27, w16, w8, x27
 		bpl	.Lsqrloop1
-	
+
 	mov	w11, v20.s[0]
 	add	x4, x24, x23, lsr #25
 	and	x3, x23, #0x1ffffff
@@ -1369,14 +1381,14 @@ mov	v10.d[0], v0.d[1]
 	bne	.Lskipmul
 	mul	w20, w13, w12
 	add	x20, sp, x20
-	
+
 	ldp	w10, w11, [x20]
 	ldp	w12, w13, [x20, #8]
 	ldp	w14, w15, [x20, #16]
 	ldp	w16, w17, [x20, #24]
 	ldp	w19, w20, [x20, #32]
 	mov	w30, #19
-	
+
 	umull	x21, w1, w19
 	umull	x22, w1, w17
 	umull	x23, w1, w16
@@ -1517,7 +1529,7 @@ mov	v10.d[0], v0.d[1]
 	add	x5, x6, x4, lsr #26
 	and	x4, x4, #0x3ffffff
 	and	x5, x5, #0x3ffffff
-	
+
 	mov	w11, v20.s[0]
 	mov	w6, w24
 	lsr	x7, x24, #32
@@ -1529,7 +1541,7 @@ mov	v10.d[0], v0.d[1]
 	mov	w13, #40
 	mul	w12, w12, w13
 	add	x12, sp, x12
-	
+
 	stp	w0, w1, [x12]
 	stp	w2, w3, [x12, #8]
 	stp	w4, w5, [x12, #16]
@@ -1544,50 +1556,50 @@ mov	v10.d[0], v0.d[1]
 
 	// Final reduce
 	// w5 and w9 are 26 bits instead of 25
-	
+
 	orr	x10, x0, x1, lsl #26
 	orr	x10, x10, x2, lsl #51
-	
+
 	lsr	x11, x2, #13
 	orr	x11, x11, x3, lsl #13
 	orr	x11, x11, x4, lsl #38
-	
+
 	add	x12, x5, x6, lsl #25
 	adds	x12, x12, x7, lsl #51
-	
+
 	lsr	x13, x7, #13
 	orr	x13, x13, x8, lsl #12
 	orr	x13, x13, x9, lsl #38
 
 	adcs	x13, x13, xzr
 	adc	x14, xzr, xzr
-	
+
 	extr	x17, x14, x13, #63
 	mov	w19, #19
 	mul	w15, w17, w19
 	add	w15, w15, #19
-	
+
 	adds	x15, x10, x15
 	adcs	x15, x11, xzr
 	adcs	x15, x12, xzr
 	adcs	x15, x13, xzr
 	adc	x16, x14, xzr
-	
+
 	extr	x16, x16, x15, #63
 	mul	w16, w16, w19
-	
+
 	adds	x10, x10, x16
 	adcs	x11, x11, xzr
 	adcs	x12, x12, xzr
 	adc	x13, x13, xzr
 	and	x13, x13, 0x7fffffffffffffff
-	
+
 	ldr	x17, [sp, #176]
 	stp	x10, x11, [x17] // todo: fix for unaligned store
 	stp	x12, x13, [x17, #16]
 
 	add sp, sp, 192
-	
+
 	ldp	x19, x20, [sp, #16]
 	ldp	x21, x22, [sp, #32]
 	ldp	x23, x24, [sp, #48]
@@ -1600,9 +1612,9 @@ mov	v10.d[0], v0.d[1]
 	ldp	x29, x30, [sp], #160
 
 	ret
-	.size	mx25519_scalarmult_arm64, .-mx25519_scalarmult_arm64
-	
-	.type	invtable, %object
+	//.size	mx25519_scalarmult_arm64, .-mx25519_scalarmult_arm64
+
+	//.type	invtable, %object
 invtable:
 	//    	square times,
 	//    	    skip mul,
@@ -1621,4 +1633,4 @@ invtable:
 	.hword	 50|       (2<<9)
 	.hword	  5|       (1<<9)
 	.hword	  0|       (0<<9)
-	.size	invtable, .-invtable
+	//.size	invtable, .-invtable
