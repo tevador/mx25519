@@ -14,7 +14,7 @@
 #define cpuid(info, x) __cpuidex(info, x, 0)
 #else
 #include <cpuid.h>
-void cpuid(uint32_t info[4], uint32_t type) {
+static void cpuid(uint32_t info[4], uint32_t type) {
     __cpuid_count(type, 0, info[0], info[1], info[2], info[3]);
 }
 #endif
