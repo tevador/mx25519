@@ -28,18 +28,20 @@
 ALIGN 32
 DECL(mx25519_scalarmult_amd64x):
 #ifdef WINABI
-  mov qword ptr [rsp+8], rdi
-  mov qword ptr [rsp+16], rsi
-  mov rdi, rcx
-  mov rsi, rdx
-  mov rdx, r8
+  mov   qword ptr [rsp+8], rdi
+  mov   qword ptr [rsp+16], rsi
+  mov   rdi, rcx
+  mov   rsi, rdx
+  mov   rdx, r8
+  mov   rcx, r9
+  movzx r8, byte ptr [rsp+40]
 #endif
 
 #include "scalarmult_mulx_adx.inc"
 
 #ifdef WINABI
-  mov rdi, qword ptr [rsp+8]
-  mov rsi, qword ptr [rsp+16]
+  mov   rdi, qword ptr [rsp+8]
+  mov   rsi, qword ptr [rsp+16]
 #endif
 
   ret
@@ -47,18 +49,20 @@ DECL(mx25519_scalarmult_amd64x):
 ALIGN 32
 DECL(mx25519_scalarmult_amd64):
 #ifdef WINABI
-  mov qword ptr [rsp+8], rdi
-  mov qword ptr [rsp+16], rsi
-  mov rdi, rcx
-  mov rsi, rdx
-  mov rdx, r8
+  mov   qword ptr [rsp+8], rdi
+  mov   qword ptr [rsp+16], rsi
+  mov   rdi, rcx
+  mov   rsi, rdx
+  mov   rdx, r8
+  mov   rcx, r9
+  movzx r8, byte ptr [rsp+40]
 #endif
 
 #include "scalarmult_compat.inc"
 
 #ifdef WINABI
-  mov rdi, qword ptr [rsp+8]
-  mov rsi, qword ptr [rsp+16]
+  mov   rdi, qword ptr [rsp+8]
+  mov   rsi, qword ptr [rsp+16]
 #endif
 
   ret

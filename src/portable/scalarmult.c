@@ -9,7 +9,9 @@
 
 void mx25519_scalarmult_portable(uint8_t* q,
     const uint8_t* n,
-    const uint8_t* p)
+    const uint8_t* p,
+    const uint8_t clamp_lo,
+    const uint8_t clamp_hi)
 {
     uint8_t e[32];
     unsigned int i;
@@ -25,9 +27,9 @@ void mx25519_scalarmult_portable(uint8_t* q,
     unsigned int b;
 
     for (i = 0; i < 32; ++i) e[i] = n[i];
-    e[0] &= 248;
-    e[31] &= 127;
-    //e[31] |= 64; do not set bit 254
+    e[0] &= clamp_lo;
+    e[31] |= clamp_hi;
+    // bit 255 is cleared implicitly by virtue of ignoring it
     fe_frombytes(x1, p);
     fe_1(x2);
     fe_0(z2);

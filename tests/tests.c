@@ -26,12 +26,11 @@ static void run_test(const char* name, test_func* func) {
 }
 
 /* RFC 7748 test vectors */
-/* the second most significant bit of each private key was set to 1 to match the RFC results */
 static const char rfc7748_sc1[] = "a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4";
 static const char rfc7748_pt1[] = "e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c";
 static const char rfc7748_re1[] = "c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552";
 
-static const char rfc7748_sc2[] = "4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea01d42ca4169e7918ba4d";
+static const char rfc7748_sc2[] = "4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea01d42ca4169e7918ba0d";
 static const char rfc7748_pt2[] = "e5210f12786811d3f4b7959d0538ae2c31dbe7106fc03c3efc4cd549c715a493";
 static const char rfc7748_re2[] = "95cbde9476e8907d7aade45cb4b873f88b595a68799fa152e6f8f7647aac7957";
 
@@ -46,7 +45,7 @@ const char test_pt4[] = "08558f428dff0dc8ee4bebf2408982cf65538a3ae57dffe4f49f43f
 const char test_re4[] = "cd178e864e4f3dd3f5e945c04b87825b84d8a224b6c240784515c5f87af27647";
 
 /* DH key exchange tests */
-static const char rfc7748_alice_priv[] = "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c6a";
+static const char rfc7748_alice_priv[] = "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a";
 static const char rfc7748_alice_pub[] = "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a";
 static const char rfc7748_bob_priv[] = "5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb";
 static const char rfc7748_bob_pub[] = "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f";
@@ -88,15 +87,21 @@ static inline bool equals_hex(const void* val, const char* hex) {
     return memcmp(val, reference, sizeof(reference)) == 0;
 }
 
-static bool check_scmul(const char* key_hex, const char* pt_hex, const char* res_hex) {
+static bool check_scmul_unclamped(const char* key_hex, const char* pt_hex,
+    const char* res_hex, mx25519_unclamp_flags unclamp_flags)
+{
     assert(impl != NULL);
     mx25519_privkey key;
     load_key(key, key_hex);
     mx25519_pubkey pt;
     load_key(pt, pt_hex);
     mx25519_pubkey res;
-    mx25519_scmul_key(impl , &res, &key, &pt);
+    mx25519_scmul_key_unclamped(impl , &res, &key, &pt, unclamp_flags);
     return equals_hex(res.data, res_hex);
+}
+
+static bool check_scmul(const char* key_hex, const char* pt_hex, const char* res_hex) {
+    return check_scmul_unclamped(key_hex, pt_hex, res_hex, MX25519_UNCLAMP_NONE);
 }
 
 static void check_dh() {
@@ -151,12 +156,27 @@ static bool test_scmul3_portable() {
 }
 
 static bool test_scmul4_portable() {
-    assert(check_scmul(test_sc4, test_pt4, test_re4));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
     return true;
 }
 
 static bool test_dh_portable() {
     check_dh();
+    return true;
+}
+
+static bool test_mul_base_times1_portable() {
+    if (impl == NULL) {
+        return false;
+    }
+
+    // check that mx25519_scmul_base(1) == B
+    const mx25519_privkey one = {.data = {1}};
+    const mx25519_pubkey B = {.data = {9}};
+    mx25519_pubkey B1;
+    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+
+    assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
 }
 
@@ -166,7 +186,7 @@ static bool test_invert1() {
     assert(equals_hex(&invkey, inv_1));
     mx25519_pubkey res;
     load_key(res, inv_pubkey);
-    mx25519_scmul_key(impl, &res, &invkey, &res);
+    mx25519_scmul_key_unclamped(impl, &res, &invkey, &res, MX25519_UNCLAMP_254);
     assert(equals_hex(&res, inv_pubkey));
     return true;
 }
@@ -179,13 +199,13 @@ static bool test_invert2() {
     load_key(keys[2], inv_priv3);
     mx25519_pubkey res;
     load_key(res, inv_pubkey);
-    mx25519_scmul_key(impl, &res, &keys[0], &res);
-    mx25519_scmul_key(impl, &res, &keys[1], &res);
-    mx25519_scmul_key(impl, &res, &keys[2], &res);
+    mx25519_scmul_key_unclamped(impl, &res, &keys[0], &res, MX25519_UNCLAMP_254);
+    mx25519_scmul_key_unclamped(impl, &res, &keys[1], &res, MX25519_UNCLAMP_254);
+    mx25519_scmul_key_unclamped(impl, &res, &keys[2], &res, MX25519_UNCLAMP_254);
     mx25519_privkey invkey;
     int fail = mx25519_invkey(&invkey, keys, NUM_KEYS);
     assert(!fail);
-    mx25519_scmul_key(impl, &res, &invkey, &res);
+    mx25519_scmul_key_unclamped(impl, &res, &invkey, &res, MX25519_UNCLAMP_254);
     assert(equals_hex(&res, inv_pubkey));
 #undef NUM_KEYS
     return true;
@@ -233,7 +253,7 @@ static bool test_scmul4_arm64() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul(test_sc4, test_pt4, test_re4));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
     return true;
 }
 
@@ -242,6 +262,21 @@ static bool test_dh_arm64() {
         return false;
     }
     check_dh();
+    return true;
+}
+
+static bool test_mul_base_times1_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+
+    // check that mx25519_scmul_base(1) == B
+    const mx25519_privkey one = {.data = {1}};
+    const mx25519_pubkey B = {.data = {9}};
+    mx25519_pubkey B1;
+    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+
+    assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
 }
 
@@ -287,7 +322,7 @@ static bool test_scmul4_amd64() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul(test_sc4, test_pt4, test_re4));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
     return true;
 }
 
@@ -296,6 +331,21 @@ static bool test_dh_amd64() {
         return false;
     }
     check_dh();
+    return true;
+}
+
+static bool test_mul_base_times1_amd64() {
+    if (impl == NULL) {
+        return false;
+    }
+
+    // check that mx25519_scmul_base(1) == B
+    const mx25519_privkey one = {.data = {1}};
+    const mx25519_pubkey B = {.data = {9}};
+    mx25519_pubkey B1;
+    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+
+    assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
 }
 
@@ -341,7 +391,7 @@ static bool test_scmul4_amd64x() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul(test_sc4, test_pt4, test_re4));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
     return true;
 }
 
@@ -350,6 +400,21 @@ static bool test_dh_amd64x() {
         return false;
     }
     check_dh();
+    return true;
+}
+
+static bool test_mul_base_times1_amd64x() {
+    if (impl == NULL) {
+        return false;
+    }
+
+    // check that mx25519_scmul_base(1) == B
+    const mx25519_privkey one = {.data = {1}};
+    const mx25519_pubkey B = {.data = {9}};
+    mx25519_pubkey B1;
+    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+
+    assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
 }
 
@@ -362,6 +427,7 @@ int main() {
     RUN_TEST(test_scmul3_portable);
     RUN_TEST(test_scmul4_portable);
     RUN_TEST(test_dh_portable);
+    RUN_TEST(test_mul_base_times1_portable);
     RUN_TEST(test_invert1);
     RUN_TEST(test_invert2);
     RUN_TEST(test_select_arm64);
@@ -371,6 +437,7 @@ int main() {
     RUN_TEST(test_scmul3_arm64);
     RUN_TEST(test_scmul4_arm64);
     RUN_TEST(test_dh_arm64);
+    RUN_TEST(test_mul_base_times1_arm64);
     RUN_TEST(test_select_amd64);
     RUN_TEST(test_type_amd64);
     RUN_TEST(test_scmul1_amd64);
@@ -378,6 +445,7 @@ int main() {
     RUN_TEST(test_scmul3_amd64);
     RUN_TEST(test_scmul4_amd64);
     RUN_TEST(test_dh_amd64);
+    RUN_TEST(test_mul_base_times1_amd64);
     RUN_TEST(test_select_amd64x);
     RUN_TEST(test_type_amd64x);
     RUN_TEST(test_scmul1_amd64x);
@@ -385,6 +453,7 @@ int main() {
     RUN_TEST(test_scmul3_amd64x);
     RUN_TEST(test_scmul4_amd64x);
     RUN_TEST(test_dh_amd64x);
+    RUN_TEST(test_mul_base_times1_amd64x);
 
     printf("\nAll tests were successful\n");
     return 0;
