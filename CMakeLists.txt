@@ -71,7 +71,7 @@ set_property(TARGET mx25519_static PROPERTY PUBLIC_HEADER include/mx25519.h)
 include_directories(mx25519_static
   include/)
 set_target_properties(mx25519_static PROPERTIES OUTPUT_NAME mx25519)
-target_compile_definitions(mx25519_static PRIVATE MX25519_STATIC)
+target_compile_definitions(mx25519_static PUBLIC MX25519_STATIC)
 
 add_executable(mx25519-tests
   tests/tests.c)
