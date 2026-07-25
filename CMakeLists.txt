@@ -43,7 +43,7 @@ if(ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "a
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /DRELWITHDEBINFO")
   else()
     list(APPEND mx25519_sources src/amd64/scalarmult_gnu.S)
-	set_property(SOURCE src/amd64/scalarmult_gnu.S PROPERTY LANGUAGE C)
+    set_property(SOURCE src/amd64/scalarmult_gnu.S PROPERTY LANGUAGE C)
     set_property(SOURCE src/amd64/scalarmult_gnu.S PROPERTY XCODE_EXPLICIT_FILE_TYPE sourcecode.asm)
   endif()
 endif()
