@@ -35,7 +35,7 @@ endif()
 message(STATUS "Build architecture: ${ARCH_ID}")
 
 # AMD64
-if(ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "amd64")
+if((CMAKE_SIZEOF_VOID_P EQUAL 8) AND (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "amd64"))
   if(MSVC)
     enable_language(ASM_MASM)
     list(APPEND mx25519_sources src/amd64/scalarmult_masm.asm)
