@@ -35,7 +35,7 @@ static const x25519_scalar_mont mont_rprime =
         0x9DB6C6F26FE91836, 0x14E75438FFA36BEA,
         0xB1A206F2FDBA84FF, 0xD2B51DA312547E1B);
 
-/* Mongomery reduction of a 512-bit product */
+/* Montgomery reduction of a 512-bit product */
 static void scalar_reduce_mont(digit res[4], const digit prod[8]) {
     digit mask;
     digit quot[4];
@@ -80,7 +80,7 @@ void mx25519_scalar_pack(uint8_t key[32], const x25519_scalar* sc)
     digit_store(key + 24, sc->v[3]);
 }
 
-/* Converts a scalar to the Mongtgomery representation */
+/* Converts a scalar to the Montgomery representation */
 void mx25519_scalar_to_mont(x25519_scalar_mont* sc_mont, const x25519_scalar* sc)
 {
     digit prod[8];
