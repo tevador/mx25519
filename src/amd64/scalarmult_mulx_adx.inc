@@ -226,9 +226,9 @@ mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
-sbb    rbx, rdi
-sbb    rbp, rdi
-sbb    rsi, rdi
+sbb    rbx, 0
+sbb    rbp, 0
+sbb    rsi, 0
 cmovb  rdi, rcx
 sub    rax, rdi
 mov    qword ptr [rsp+32], rax
@@ -276,9 +276,9 @@ mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
-sbb    rbx, rdi
-sbb    rbp, rdi
-sbb    rsi, rdi
+sbb    rbx, 0
+sbb    rbp, 0
+sbb    rsi, 0
 cmovb  rdi, rcx
 sub    rax, rdi
 mov    qword ptr [rsp+96], rax
@@ -679,9 +679,9 @@ mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
-sbb    rbx, rdi
-sbb    rbp, rdi
-sbb    rsi, rdi
+sbb    rbx, 0
+sbb    rbp, 0
+sbb    rsi, 0
 cmovb  rdi, rcx
 sub    rax, rdi
 
