@@ -8,8 +8,7 @@ set(mx25519_sources
 src/portable/scalarmult.c
 src/cpu.c
 src/impl.c
-src/mx25519.c
-src/scalar.c)
+src/mx25519.c)
 
 if(NOT ARCH_ID)
   # allow cross compiling

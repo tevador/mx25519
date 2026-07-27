@@ -8,7 +8,6 @@
 
 #include "impl.h"
 #include "cpu.h"
-#include "scalar.h"
 #include "platform.h"
 
 #include <stdint.h>
@@ -122,41 +121,4 @@ void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
     const mx25519_pubkey* pt, mx25519_unclamp_flags unclamp_flags)
 {
     clamp_and_dispatch(impl, result, key, pt, unclamp_flags);
-}
-
-int mx25519_invkey(mx25519_privkey* invkey, const mx25519_privkey keys[],
-    size_t num_keys)
-{
-    assert(invkey != NULL);
-    assert(keys != NULL || num_keys == 0);
-
-    /* calculate 8*key[0]*key[1]*... in Montgomery form */
-    x25519_scalar_mont prod_mont = mx25519_sc8_mont;
-
-    for (size_t i = 0; i < num_keys; ++i) {
-        x25519_scalar key_sc;
-        x25519_scalar_mont key_mont;
-        mx25519_scalar_unpack(&key_sc, keys[i].data);
-        key_sc.v[0] &= 0xfffffffffffffff8;
-        key_sc.v[3] &= 0x7fffffffffffffff;
-        mx25519_scalar_to_mont(&key_mont, &key_sc);
-        mx25519_scalar_mul(&prod_mont, &prod_mont, &key_mont);
-    }
-
-    /* invert in Montgomery form */
-    mx25519_scalar_inv(&prod_mont, &prod_mont);
-
-    /* convert back from Montgomery form */
-    x25519_scalar res;
-    mx25519_scalar_from_mont(&res, &prod_mont);
-
-    if (res.v[3] >= 0x1000000000000000) {
-        return 1; /* inverse is larger than or equal to 2^252 */
-    }
-
-    /* shift left by 3 bits */
-    mx25519_scalar_lsh3(&res);
-
-    mx25519_scalar_pack(invkey->data, &res);
-    return 0;
 }
