@@ -160,23 +160,6 @@ MX25519_API void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
     mx25519_pubkey* result, const mx25519_privkey* key,
     const mx25519_pubkey* p, mx25519_unclamp_flags unclamp_flags);
 
-/*
- * Calculates invkey = 1/(key[0]*key[1]*...). This private key can be used
- * to remove the respective private key components from a public key.
- * (This only works for public keys that lie on Curve25519 and not on
- * its quadratic twist.)
- *
- * @param invkey is the pointer where the resulting private key will be stored.
- *        Must not be NULL.
- * @param key is an array of private keys to invert. Must not be NULL.
- * @param num_keys is the number of private keys in the array.
- *
- * @return zero on success, a non-zero value in case of a failure. A failure
- *         can occur with a probability of approx. 2^(-124).
- */
-MX25519_API int mx25519_invkey(mx25519_privkey* invkey,
-    const mx25519_privkey keys[], size_t num_keys);
-
 #ifdef __cplusplus
 }
 #endif

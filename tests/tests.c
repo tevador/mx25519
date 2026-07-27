@@ -51,13 +51,6 @@ static const char rfc7748_bob_priv[] = "5dab087e624a8a4b79e17f8b83800ee66f3bb129
 static const char rfc7748_bob_pub[] = "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f";
 static const char rfc7748_shared[] = "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742";
 
-/* scalar inversion tests */
-const char inv_1[] = "c87be1164f29370883d6e6e89bed9c3e00000000000000000000000000000030";
-const char inv_priv1[] = "d365dfc2872dc2c49e0165cd9a41141cbd103e7d6a0e281751c2c2955facb87d";
-const char inv_priv2[] = "a242507ec0109f853f0c473b755af057e697eb73af42ba981ecbc39eb2135b43";
-const char inv_priv3[] = "943df7d7fd479a904d113e14a1b47c7c3a82ca8dc04af57ca42c7d43baa7f327";
-const char inv_pubkey[] = "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f";
-
 static const mx25519_impl* impl;
 
 static inline void output_hex(const uint8_t* data, int length) {
@@ -177,37 +170,6 @@ static bool test_mul_base_times1_portable() {
     mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
 
     assert(memcmp(&B1, &B, sizeof(B)) == 0);
-    return true;
-}
-
-static bool test_invert1() {
-    mx25519_privkey invkey;
-    mx25519_invkey(&invkey, NULL, 0);
-    assert(equals_hex(&invkey, inv_1));
-    mx25519_pubkey res;
-    load_key(res, inv_pubkey);
-    mx25519_scmul_key_unclamped(impl, &res, &invkey, &res, MX25519_UNCLAMP_254);
-    assert(equals_hex(&res, inv_pubkey));
-    return true;
-}
-
-static bool test_invert2() {
-#define NUM_KEYS 3
-    mx25519_privkey keys[NUM_KEYS];
-    load_key(keys[0], inv_priv1);
-    load_key(keys[1], inv_priv2);
-    load_key(keys[2], inv_priv3);
-    mx25519_pubkey res;
-    load_key(res, inv_pubkey);
-    mx25519_scmul_key_unclamped(impl, &res, &keys[0], &res, MX25519_UNCLAMP_254);
-    mx25519_scmul_key_unclamped(impl, &res, &keys[1], &res, MX25519_UNCLAMP_254);
-    mx25519_scmul_key_unclamped(impl, &res, &keys[2], &res, MX25519_UNCLAMP_254);
-    mx25519_privkey invkey;
-    int fail = mx25519_invkey(&invkey, keys, NUM_KEYS);
-    assert(!fail);
-    mx25519_scmul_key_unclamped(impl, &res, &invkey, &res, MX25519_UNCLAMP_254);
-    assert(equals_hex(&res, inv_pubkey));
-#undef NUM_KEYS
     return true;
 }
 
@@ -428,8 +390,6 @@ int main() {
     RUN_TEST(test_scmul4_portable);
     RUN_TEST(test_dh_portable);
     RUN_TEST(test_mul_base_times1_portable);
-    RUN_TEST(test_invert1);
-    RUN_TEST(test_invert2);
     RUN_TEST(test_select_arm64);
     RUN_TEST(test_type_arm64);
     RUN_TEST(test_scmul1_arm64);
