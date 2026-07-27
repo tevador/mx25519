@@ -62,6 +62,24 @@ static mx25519_type select_best_impl(void) {
 #endif
 }
 
+static void clamp_and_dispatch(const mx25519_impl* impl,
+    mx25519_pubkey* result, const mx25519_privkey* key,
+    const mx25519_pubkey* pt, mx25519_unclamp_flags unclamp_flags)
+{
+    const uint8_t lsb_mask = 248 | ((unclamp_flags & MX25519_UNCLAMP_LSBS) * 7);
+    const uint8_t msb_mask = (~unclamp_flags & MX25519_UNCLAMP_254) << 5;
+
+    assert(impl != NULL);
+    assert(pt != NULL);
+    assert(key != NULL);
+    assert(result != NULL);
+    assert(impl->scmul != NULL);
+    assert(impl->type <= MX25519_TYPE_AMD64X);
+
+    /* dispatch */
+    impl->scmul(result->data, key->data, pt->data, lsb_mask, msb_mask);
+}
+
 const mx25519_impl* mx25519_select_impl(mx25519_type type)
 {
     if (type == MX25519_TYPE_AUTO) {
@@ -83,20 +101,27 @@ mx25519_type mx25519_impl_type(const mx25519_impl* impl)
 void mx25519_scmul_base(const mx25519_impl* impl, mx25519_pubkey* result,
     const mx25519_privkey* key)
 {
-    assert(impl != NULL);
-    assert(key != NULL);
-    assert(result != NULL);
-    impl->scmul(result->data, key->data, x25519_base.data);
+    clamp_and_dispatch(impl, result, key, &x25519_base, MX25519_UNCLAMP_NONE);
+}
+
+void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
+    mx25519_pubkey* result, const mx25519_privkey* key,
+    mx25519_unclamp_flags unclamp_flags)
+{
+    clamp_and_dispatch(impl, result, key, &x25519_base, unclamp_flags);
 }
 
 void mx25519_scmul_key(const mx25519_impl* impl, mx25519_pubkey* result,
     const mx25519_privkey* key, const mx25519_pubkey* pt)
 {
-    assert(impl != NULL);
-    assert(pt != NULL);
-    assert(key != NULL);
-    assert(result != NULL);
-    impl->scmul(result->data, key->data, pt->data);
+    clamp_and_dispatch(impl, result, key, pt, MX25519_UNCLAMP_NONE);
+}
+
+void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
+    mx25519_pubkey* result, const mx25519_privkey* key,
+    const mx25519_pubkey* pt, mx25519_unclamp_flags unclamp_flags)
+{
+    clamp_and_dispatch(impl, result, key, pt, unclamp_flags);
 }
 
 int mx25519_invkey(mx25519_privkey* invkey, const mx25519_privkey keys[],

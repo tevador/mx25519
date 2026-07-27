@@ -15,30 +15,34 @@ PUBLIC mx25519_scalarmult_amd64
 include constants.inc
 
 mx25519_scalarmult_amd64x PROC
-  mov qword ptr [rsp+8], rdi
-  mov qword ptr [rsp+16], rsi
-  mov rdi, rcx
-  mov rsi, rdx
-  mov rdx, r8
+  mov   qword ptr [rsp+8], rdi
+  mov   qword ptr [rsp+16], rsi
+  mov   rdi, rcx
+  mov   rsi, rdx
+  mov   rdx, r8
+  mov   rcx, r9
+  movzx r8, byte ptr [rsp+40]
 
 include scalarmult_mulx_adx.inc
 
-  mov rdi, qword ptr [rsp+8]
-  mov rsi, qword ptr [rsp+16]
+  mov   rdi, qword ptr [rsp+8]
+  mov   rsi, qword ptr [rsp+16]
   ret
 mx25519_scalarmult_amd64x ENDP
 
 mx25519_scalarmult_amd64 PROC
-  mov qword ptr [rsp+8], rdi
-  mov qword ptr [rsp+16], rsi
-  mov rdi, rcx
-  mov rsi, rdx
-  mov rdx, r8
+  mov   qword ptr [rsp+8], rdi
+  mov   qword ptr [rsp+16], rsi
+  mov   rdi, rcx
+  mov   rsi, rdx
+  mov   rdx, r8
+  mov   rcx, r9
+  movzx r8, byte ptr [rsp+40]
 
 include scalarmult_compat.inc
 
-  mov rdi, qword ptr [rsp+8]
-  mov rsi, qword ptr [rsp+16]
+  mov   rdi, qword ptr [rsp+8]
+  mov   rsi, qword ptr [rsp+16]
   ret
 mx25519_scalarmult_amd64 ENDP
 
