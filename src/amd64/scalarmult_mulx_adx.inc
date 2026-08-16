@@ -1,4 +1,4 @@
-;# Copyright (c) 2022 tevador <tevador@gmail.com>
+;# Copyright (c) 2022-2026 tevador <tevador@gmail.com>
 ;#
 ;# This file is part of mx25519, which is released under LGPLv3.
 ;# See LICENSE for full license details.
@@ -43,54 +43,61 @@
 ;#     rcx -> lo byte clamping mask
 ;#     r8  -> hi byte clamping mask
 
-sub rsp, 392
+;# 32-byte align rsp
+mov r11, rsp
+and r11, 31
+add r11, 416
+sub rsp, r11
+add r11, 384 ;# the secondary stack frame size is stored in r11
 
-;# stack layout (offsets from rsp):
-;# 0 T1
-;# 32 T2
-;# 64 T3
-;# 96 T4
-;# 128 X1
-;# 160 X2
-;# 192 X3
-;# 224 Z2
+;# [primary stack frame]
+;# (offsets from rsp)
+;# 416 alignment
+;# 352 saved registers: rbx, rbp, rdi, r11, r12, r13, r14, r15
+;# 320 private key
+;# 312 key byte index (4 bytes)
+;# 306 current key byte value (1 byte)
+;# 305 swap flag (1 byte)
+;# 304 key bit index (1 byte)
 ;# 256 Z3
-;# 288 saved registers: rbx, rbp, rdi, rsi, r12, r13, r14, r15
-;# 352 key bit index (1 byte)
-;# 353 swap flag (1 byte)
-;# 354 current key byte value (1 byte)
-;# 356 key byte index (4 bytes)
-;# 360 private key
+;# 224 Z2
+;# 192 X3
+;# 160 X2
+;# 128 X1
+;# 96 T4
+;# 64 T3
+;# 32 T2
+;# 0 T1
 
-mov    qword ptr [rsp+288], rbx
-mov    qword ptr [rsp+296], rbp
-mov    qword ptr [rsp+304], rdi
-;# mov    qword ptr [rsp+312], rsi
-mov    qword ptr [rsp+320], r12
-mov    qword ptr [rsp+328], r13
-mov    qword ptr [rsp+336], r14
-mov    qword ptr [rsp+344], r15
+mov    qword ptr [rsp+352], rbx
+mov    qword ptr [rsp+360], rbp
+mov    qword ptr [rsp+368], rdi
+mov    qword ptr [rsp+376], r11
+mov    qword ptr [rsp+384], r12
+mov    qword ptr [rsp+392], r13
+mov    qword ptr [rsp+400], r14
+mov    qword ptr [rsp+408], r15
 
 ;# copy the private key and clamp it
 shl    r8, 56
 or     rcx, -8
 mov    r9, qword ptr [rsi+24]
 or     r9, r8
-mov    qword ptr [rsp+384], r9
+mov    qword ptr [rsp+344], r9
 mov    r8, qword ptr [rsi]
 and    r8, rcx
-mov    qword ptr [rsp+360], r8
+mov    qword ptr [rsp+320], r8
 mov    r8, qword ptr [rsi+8]
-mov    qword ptr [rsp+368], r8
+mov    qword ptr [rsp+328], r8
 mov    r8, qword ptr [rsi+16]
-mov    qword ptr [rsp+376], r8
+mov    qword ptr [rsp+336], r8
 
 ;# starting from bit 6 of the 31st byte
 mov    eax, 31
-mov    byte ptr [rsp+352], 6
-mov    byte ptr [rsp+353], 0
-mov    dword ptr [rsp+356], eax
-lea    rsi, [rsp+360]
+mov    byte ptr [rsp+304], 6
+mov    byte ptr [rsp+305], 0
+mov    dword ptr [rsp+312], eax
+lea    rsi, [rsp+320]
 
 ;# load XP
 mov    r8, qword ptr [rdx]
@@ -150,7 +157,7 @@ loop_byte_x:
 ;# rsi = private key address
 ;# eax = key byte index
 movzx  ecx, byte ptr [rsi+rax]
-mov    byte ptr [rsp+354], cl
+mov    byte ptr [rsp+306], cl
 
 ;#
 ;# Montgomery ladder step
@@ -458,13 +465,13 @@ mov    qword ptr [rsp+200], r9
 mov    qword ptr [rsp+208], r10
 mov    qword ptr [rsp+216], r11
 
-movzx  ecx, byte ptr [rsp+352]
-movzx  ebx, byte ptr [rsp+354]
+movzx  ecx, byte ptr [rsp+304]
+movzx  ebx, byte ptr [rsp+306]
 shr    bl, cl
 and    bl, 1
 mov    cl, bl
-xor    bl, byte ptr [rsp+353]
-mov    byte ptr [rsp+353], cl
+xor    bl, byte ptr [rsp+305]
+mov    byte ptr [rsp+305], cl
 cmp    bl, 1
 
 ;# CSelect(T1,T3,select)
@@ -1155,30 +1162,24 @@ mov    qword ptr [rsp+264], r9
 mov    qword ptr [rsp+272], r10
 mov    qword ptr [rsp+280], r11
 
-movzx  ecx, byte ptr [rsp+352]
+movzx  ecx, byte ptr [rsp+304]
 sub    ecx, 1
-mov    byte ptr [rsp+352], cl
+mov    byte ptr [rsp+304], cl
 ;# cmp    cl, 0
 jge    loop_bit_x
 
-mov    byte ptr [rsp+352], 7
-lea    rsi, [rsp+360]
-mov    eax, dword ptr [rsp+356]
+mov    byte ptr [rsp+304], 7
+lea    rsi, [rsp+320]
+mov    eax, dword ptr [rsp+312]
 sub    eax, 1
-mov    dword ptr [rsp+356], eax
+mov    dword ptr [rsp+312], eax
 ;# cmp    eax, 0
 jge    loop_byte_x
 
-;# remove the private key from the stack
-mov    qword ptr [rsi], 0
-mov    qword ptr [rsi+8], 0
-mov    qword ptr [rsi+16], 0
-mov    qword ptr [rsi+24], 0
-
 ;# load select, AKA the LSB, then remove
 ;# needed to support privkeys wth unclamped LSB
-mov bl, byte ptr [rsp+353]
-mov byte ptr [rsp+353], 0
+mov bl, byte ptr [rsp+305]
+mov byte ptr [rsp+305], 0
 cmp bl, 1
 
 ;# CSelect(X2,X3,select)
@@ -1209,236 +1210,1144 @@ cmove  r9, r13
 cmove  r10, r14
 cmove  r11, r15
 
+;# overwrite the private key on the stack with X2
+mov    qword ptr [rsp+320], rsi
+mov    qword ptr [rsp+328], rbp
+mov    qword ptr [rsp+336], rcx
+mov    qword ptr [rsp+344], rax
+
+sub    rsp, 384
+
+;# [secondary stack frame]
+;# (offsets from rsp)
+;# 800 alignment
+;# 736 saved registers: rbx, rbp, rdi, r11, r12, r13, r14, r15
+;# 704 X2
+;# (0-703) scratch space
+
+;# Z2 in: r8, r9, r10, r11
+;# begin inversion
+
+lea rdx, [gcd_table+REG_REL]
+mov rsi, r11
+sar rsi, 63
+btr r11, 63
+and rsi, 19
+add rsi, 19
+add r8, rsi
+adc r9, 0
+adc r10, 0
+adc r11, 0
+mov rsi, r11
+sar rsi, 63
+btr r11, 63
+and rsi, 19
+add r8, rsi
+adc r9, 0
+adc r10, 0
+adc r11, 0
+sub r8, 19
+sbb r9, 0
+sbb r10, 0
+sbb r11, 0
+mov rsi, -1152921504606846976
+andn r14, rsi, r8
+vmovupd ymm0, ymmword ptr [rdx+288]
+vmovapd ymmword ptr [rsp+32], ymm0
+mov rax, r8
+and rax, 1073741823
+mov qword ptr [rsp+48], rax
+vmovupd ymm0, ymmword ptr [rdx+320]
+vmovapd ymmword ptr [rsp+64], ymm0
+mov rax, r8
+shr rax, 30
+and rax, 1073741823
+mov qword ptr [rsp+80], rax
+vmovupd ymm0, ymmword ptr [rdx+352]
+vmovapd ymmword ptr [rsp+96], ymm0
+shrd r8, r9, 60
+and r8, 1073741823
+mov qword ptr [rsp+112], r8
+vmovupd ymm0, ymmword ptr [rdx+384]
+vmovapd ymmword ptr [rsp+128], ymm0
+mov rsi, r9
+shr rsi, 26
+and rsi, 1073741823
+mov qword ptr [rsp+144], rsi
+vmovupd ymm0, ymmword ptr [rdx+416]
+vmovapd ymmword ptr [rsp+160], ymm0
+shrd r9, r10, 56
+and r9, 1073741823
+mov qword ptr [rsp+176], r9
+vmovupd ymm0, ymmword ptr [rdx+448]
+vmovapd ymmword ptr [rsp+192], ymm0
+mov rsi, r10
+shr rsi, 22
+and rsi, 1073741823
+mov qword ptr [rsp+208], rsi
+vmovupd ymm0, ymmword ptr [rdx+480]
+vmovapd ymmword ptr [rsp+224], ymm0
+shrd r10, r11, 52
+and r10, 1073741823
+mov qword ptr [rsp+240], r10
+vmovupd ymm0, ymmword ptr [rdx+512]
+vmovapd ymmword ptr [rsp+256], ymm0
+mov rsi, r11
+shr rsi, 18
+and rsi, 1073741823
+mov qword ptr [rsp+272], rsi
+vmovupd ymm0, ymmword ptr [rdx+544]
+vmovapd ymmword ptr [rsp+288], ymm0
+shr r11, 48
+mov qword ptr [rsp+304], r11
+mov rdi, -19
+xor rsi, rsi
+mov rcx, -1
+mov qword ptr [rsp], rsi
+mov qword ptr [rsp+8], rcx
+mov rcx, -1048576
+vmovupd ymm0, ymmword ptr [rdx]
+vmovapd ymmword ptr [rsp+320], ymm0
+vmovupd ymm0, ymmword ptr [rdx+32]
+vmovapd ymmword ptr [rsp+352], ymm0
+vmovupd ymm0, ymmword ptr [rdx+64]
+vmovapd ymmword ptr [rsp+384], ymm0
+vmovupd ymm0, ymmword ptr [rdx+96]
+vmovapd ymmword ptr [rsp+416], ymm0
+vmovupd ymm0, ymmword ptr [rdx+128]
+vmovapd ymmword ptr [rsp+448], ymm0
+vmovupd ymm0, ymmword ptr [rdx+160]
+vmovapd ymmword ptr [rsp+480], ymm0
+vmovupd ymm0, ymmword ptr [rdx+192]
+vmovapd ymmword ptr [rsp+512], ymm0
+vmovupd ymm0, ymmword ptr [rdx+224]
+vmovapd ymmword ptr [rsp+544], ymm0
+vmovupd ymm0, ymmword ptr [rdx+256]
+mov r8, 10
+mov r10, 1152921504606846976
+xor r11, r11
+mov r12, r10
+xor r13, r13
+
+ALIGN 16
+_bigloop:
+mov rax, r14
+imul r12
+mov rbx, rax
+mov rbp, rdx
+mov rax, rdi
+imul r13
+add rbx, rax
+adc rbp, rdx
+shrd rbx, rbp, 60
+mov rax, rdi
+imul r10
+mov rdi, rax
+mov rbp, rdx
+mov rax, r14
+imul r11
+add rdi, rax
+adc rbp, rdx
+shrd rdi, rbp, 60
+vpinsrq xmm1, xmm1, r11, 0
+vpinsrq xmm1, xmm1, r13, 1
+imul r11, r15
+imul r15, r12
+imul r13, r9
+imul r9, r10
+add r9, r11
+add r15, r13
+add rdi, r9
+lea rdx, [rbx+r15]
+vmovapd ymm2, ymmword ptr [rsp+32]
+andn r9, rcx, rdi
+
+_loop20_init:
+andn rax, rcx, rdx
+vpinsrq xmm3, xmm3, r10, 0
+add r9, qword ptr [inv_bias41+REG_REL]
+add rax, qword ptr [inv_bias62+REG_REL]
+vpinsrq xmm3, xmm3, r12, 1
+mov r10, qword ptr [rsp+8]
+mov r11, rax
+vpermq ymm4, ymm2, 78
+lea r12, [rax+r9]
+test rax, 1
+cmovne r10, rsi
+vpermq ymm3, ymm3, 80
+cmove r12, rax
+lea r13, [rsi+1]
+vpermq ymm1, ymm1, 80
+sub rax, r9
+sar rax, 1
+vmovapd ymm5, ymmword ptr [rsp+448]
+sar r12, 1
+neg rsi
+vpand ymm6, ymm5, ymm3
+cmp r10, 0
+cmovge r9, r11
+vpand ymm7, ymm5, ymm1
+cmovl rax, r12
+cmovl rsi, r13
+vpmuldq ymm8, ymm2, ymm6
+mov r10, -1
+mov r11, rax
+vpmuldq ymm9, ymm4, ymm7
+lea r12, [rax+r9]
+test rax, 1
+vpaddq ymm8, ymm9, ymm8
+cmovne r10, rsi
+cmove r12, rax
+vmovapd ymm9, ymmword ptr [rsp+416]
+lea r13, [rsi+1]
+vmovapd ymm10, ymmword ptr [rsp+320]
+sub rax, r9
+sar rax, 1
+sar r12, 1
+vpmuldq ymm11, ymm9, ymm8
+neg rsi
+cmp r10, 0
+vpand ymm11, ymm5, ymm11
+cmovge r9, r11
+cmovl rax, r12
+vpmuldq ymm12, ymm10, ymm11
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpsubq ymm8, ymm8, ymm12
+mov r11, rax
+vpaddq ymm8, ymm8, ymmword ptr [rsp+544]
+lea r12, [rax+r9]
+test rax, 1
+cmovne r10, rsi
+cmove r12, rax
+vpsrlq ymm8, ymm8, 30
+lea r13, [rsi+1]
+vpsllq ymm11, ymm11, 15
+sub rax, r9
+sar rax, 1
+sar r12, 1
+vmovapd ymm12, ymmword ptr [rsp+64]
+neg rsi
+vpermq ymm13, ymm12, 78
+cmp r10, 0
+cmovge r9, r11
+cmovl rax, r12
+vpmuldq ymm14, ymm12, ymm6
+cmovl rsi, r13
+vpmuldq ymm15, ymm13, ymm7
+mov r10, -1
+mov r11, rax
+vpaddq ymm14, ymm15, ymm14
+lea r12, [rax+r9]
+test rax, 1
+vpsrlq ymm3, ymm3, 30
+cmovne r10, rsi
+vpsrlq ymm1, ymm1, 30
+cmove r12, rax
+lea r13, [rsi+1]
+sub rax, r9
+vpmuldq ymm2, ymm2, ymm3
+sar rax, 1
+sar r12, 1
+vpmuldq ymm4, ymm4, ymm1
+neg rsi
+cmp r10, 0
+vpaddq ymm2, ymm4, ymm2
+cmovge r9, r11
+cmovl rax, r12
+vpaddq ymm2, ymm14, ymm2
+cmovl rsi, r13
+mov r10, -1
+vpaddq ymm2, ymm8, ymm2
+mov r11, rax
+lea r12, [rax+r9]
+vpmuldq ymm4, ymm9, ymm2
+test rax, 1
+cmovne r10, rsi
+cmove r12, rax
+vpand ymm4, ymm5, ymm4
+lea r13, [rsi+1]
+vpmuldq ymm8, ymm10, ymm4
+sub rax, r9
+sar rax, 1
+vpsubq ymm2, ymm2, ymm8
+sar r12, 1
+neg rsi
+vpaddq ymm2, ymm0, ymm2
+cmp r10, 0
+cmovge r9, r11
+vpsrlq ymm2, ymm2, 30
+cmovl rax, r12
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpsllq ymm4, ymm4, 15
+mov r11, rax
+vmovapd ymm8, ymmword ptr [rsp+96]
+lea r12, [rax+r9]
+test rax, 1
+vpermq ymm9, ymm8, 78
+cmovne r10, rsi
+cmove r12, rax
+vpmuldq ymm10, ymm12, ymm3
+lea r13, [rsi+1]
+sub rax, r9
+vpmuldq ymm12, ymm13, ymm1
+sar rax, 1
+vpaddq ymm10, ymm12, ymm10
+sar r12, 1
+neg rsi
+cmp r10, 0
+vpmuldq ymm12, ymm8, ymm6
+cmovge r9, r11
+cmovl rax, r12
+vpmuldq ymm13, ymm9, ymm7
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpaddq ymm12, ymm13, ymm12
+mov r11, rax
+lea r12, [rax+r9]
+vpaddq ymm12, ymm10, ymm12
+test rax, 1
+cmovne r10, rsi
+vpaddq ymm12, ymm2, ymm12
+cmove r12, rax
+lea r13, [rsi+1]
+vpaddq ymm2, ymm0, ymm12
+sub rax, r9
+sar rax, 1
+vpsrlq ymm2, ymm2, 30
+sar r12, 1
+vmovapd ymm10, ymmword ptr [rsp+128]
+neg rsi
+cmp r10, 0
+cmovge r9, r11
+vpermq ymm13, ymm10, 78
+cmovl rax, r12
+cmovl rsi, r13
+vpmuldq ymm8, ymm8, ymm3
+vpmuldq ymm9, ymm9, ymm1
+mov r10, qword ptr [rsp+8]
+mov r11, rax
+lea r12, [rax+r9]
+test rax, 1
+vpaddq ymm8, ymm9, ymm8
+cmovne r10, rsi
+cmove r12, rax
+vpmuldq ymm9, ymm10, ymm6
+lea r13, [rsi+1]
+vpmuldq ymm14, ymm13, ymm7
+sub rax, r9
+sar rax, 1
+sar r12, 1
+vpaddq ymm9, ymm14, ymm9
+neg rsi
+cmp r10, 0
+vpaddq ymm9, ymm8, ymm9
+cmovge r9, r11
+cmovl rax, r12
+cmovl rsi, r13
+vpaddq ymm9, ymm2, ymm9
+mov r10, -1
+vpand ymm12, ymm5, ymm12
+mov r11, rax
+lea r12, [rax+r9]
+vpaddq ymm2, ymm0, ymm9
+test rax, 1
+vpsrlq ymm2, ymm2, 30
+cmovne r10, rsi
+cmove r12, rax
+lea r13, [rsi+1]
+vpand ymm9, ymm5, ymm9
+sub rax, r9
+sar rax, 1
+vmovapd ymmword ptr [rsp+64], ymm9
+sar r12, 1
+vpsllq ymm8, ymm9, 30
+neg rsi
+cmp r10, 0
+cmovge r9, r11
+vpaddq ymm8, ymm12, ymm8
+cmovl rax, r12
+cmovl rsi, r13
+vmovapd ymmword ptr [rsp+640], ymm8
+mov r10, qword ptr [rsp+8]
+mov r11, rax
+lea r12, [rax+r9]
+vmovapd ymm8, ymmword ptr [rsp+160]
+vpermq ymm9, ymm8, 78
+test rax, 1
+cmovne r10, rsi
+cmove r12, rax
+vpmuldq ymm10, ymm10, ymm3
+lea r13, [rsi+1]
+sub rax, r9
+vpmuldq ymm13, ymm13, ymm1
+sar rax, 1
+sar r12, 1
+vpaddq ymm10, ymm13, ymm10
+neg rsi
+vpmuldq ymm13, ymm8, ymm6
+cmp r10, 0
+cmovge r9, r11
+cmovl rax, r12
+vpmuldq ymm14, ymm9, ymm7
+cmovl rsi, r13
+mov r10, -1
+vpaddq ymm13, ymm14, ymm13
+mov r11, rax
+lea r12, [rax+r9]
+vpaddq ymm13, ymm10, ymm13
+test rax, 1
+cmovne r10, rsi
+cmove r12, rax
+vpaddq ymm13, ymm2, ymm13
+lea r13, [rsi+1]
+sub rax, r9
+vpaddq ymm2, ymm0, ymm13
+vpsrlq ymm2, ymm2, 30
+sar rax, 1
+sar r12, 1
+neg rsi
+vmovapd ymm10, ymmword ptr [rsp+192]
+cmp r10, 0
+cmovge r9, r11
+vpermq ymm14, ymm10, 78
+cmovl rax, r12
+cmovl rsi, r13
+mov r10, -1
+vpmuldq ymm8, ymm8, ymm3
+mov r11, rax
+vpmuldq ymm9, ymm9, ymm1
+lea r12, [rax+r9]
+test rax, 1
+vpaddq ymm8, ymm9, ymm8
+cmovne r10, rsi
+cmove r12, rax
+lea r13, [rsi+1]
+vpmuldq ymm9, ymm10, ymm6
+vpmuldq ymm15, ymm14, ymm7
+sub rax, r9
+sar rax, 1
+sar r12, 1
+vpaddq ymm9, ymm15, ymm9
+neg rsi
+cmp r10, 0
+vpaddq ymm9, ymm8, ymm9
+cmovge r9, r11
+cmovl rax, r12
+vpaddq ymm9, ymm2, ymm9
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpaddq ymm2, ymm0, ymm9
+mov r11, rax
+lea r12, [rax+r9]
+vpsrlq ymm2, ymm2, 30
+test rax, 1
+cmovne r10, rsi
+vpand ymm9, ymm5, ymm9
+cmove r12, rax
+lea r13, [rsi+1]
+vpand ymm13, ymm5, ymm13
+sub rax, r9
+sar rax, 1
+vmovapd ymmword ptr [rsp+96], ymm13
+sar r12, 1
+neg rsi
+cmp r10, 0
+vpsllq ymm8, ymm9, 30
+cmovge r9, r11
+vpaddq ymm8, ymm13, ymm8
+cmovl rax, r12
+cmovl rsi, r13
+vmovapd ymmword ptr [rsp+672], ymm8
+mov r10, qword ptr [rsp+8]
+mov r11, rax
+vmovapd ymm8, ymmword ptr [rsp+224]
+lea r12, [rax+r9]
+test rax, 1
+vpermq ymm13, ymm8, 78
+cmovne r10, rsi
+cmove r12, rax
+vpmuldq ymm10, ymm10, ymm3
+lea r13, [rsi+1]
+sub rax, r9
+vpmuldq ymm14, ymm14, ymm1
+sar rax, 1
+vpaddq ymm10, ymm14, ymm10
+sar r12, 1
+neg rsi
+cmp r10, 0
+vpmuldq ymm14, ymm8, ymm6
+cmovge r9, r11
+cmovl rax, r12
+vpmuldq ymm15, ymm13, ymm7
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpaddq ymm14, ymm15, ymm14
+mov r11, rax
+lea r12, [rax+r9]
+test rax, 1
+vpaddq ymm14, ymm10, ymm14
+cmovne r10, rsi
+cmove r12, rax
+lea r13, [rsi+1]
+vpaddq ymm14, ymm2, ymm14
+sub rax, r9
+sar rax, 1
+vpaddq ymm2, ymm0, ymm14
+vpsrlq ymm2, ymm2, 30
+sar r12, 1
+neg rsi
+cmp r10, 0
+vmovapd ymmword ptr [rsp+128], ymm9
+vmovapd ymm9, ymmword ptr [rsp+256]
+cmovge r9, r11
+cmovl rax, r12
+cmovl rsi, r13
+vpermq ymm10, ymm9, 78
+mov r10, qword ptr [rsp+8]
+vpmuldq ymm8, ymm8, ymm3
+mov r11, rax
+lea r12, [rax+r9]
+test rax, 1
+vpmuldq ymm13, ymm13, ymm1
+cmovne r10, rsi
+cmove r12, rax
+vpaddq ymm8, ymm13, ymm8
+lea r13, [rsi+1]
+sub rax, r9
+vpmuldq ymm13, ymm9, ymm6
+sar rax, 1
+sar r12, 1
+vpmuldq ymm15, ymm10, ymm7
+neg rsi
+cmp r10, 0
+vpaddq ymm13, ymm15, ymm13
+cmovge r9, r11
+cmovl rax, r12
+vpaddq ymm13, ymm8, ymm13
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpaddq ymm13, ymm2, ymm13
+mov r11, rax
+lea r12, [rax+r9]
+vpaddq ymm2, ymm0, ymm13
+test rax, 1
+cmovne r10, rsi
+vpsrlq ymm2, ymm2, 30
+cmove r12, rax
+vpand ymm14, ymm5, ymm14
+lea r13, [rsi+1]
+sub rax, r9
+sar rax, 1
+vmovapd ymmword ptr [rsp+160], ymm14
+sar r12, 1
+vmovapd ymm8, ymmword ptr [rsp+288]
+neg rsi
+cmp r10, 0
+cmovge r9, r11
+vpermq ymm14, ymm8, 78
+cmovl rax, r12
+cmovl rsi, r13
+vpmuldq ymm9, ymm9, ymm3
+mov r10, -1
+mov r11, rax
+vpmuldq ymm10, ymm10, ymm1
+lea r12, [rax+r9]
+test rax, 1
+cmovne r10, rsi
+vpaddq ymm9, ymm10, ymm9
+cmove r12, rax
+vpmuldq ymm6, ymm8, ymm6
+lea r13, [rsi+1]
+sub rax, r9
+vpmuldq ymm7, ymm14, ymm7
+sar rax, 1
+vpaddq ymm6, ymm7, ymm6
+sar r12, 1
+neg rsi
+cmp r10, 0
+cmovge r9, r11
+vpaddq ymm6, ymm9, ymm6
+vpaddq ymm6, ymm2, ymm6
+cmovl rax, r12
+cmovl rsi, r13
+mov r10, qword ptr [rsp+8]
+vpaddq ymm6, ymm11, ymm6
+mov r11, rax
+lea r12, [rax+r9]
+vpaddq ymm2, ymm0, ymm6
+test rax, 1
+vpsrlq ymm2, ymm2, 30
+cmovne r10, rsi
+cmove r12, rax
+lea r13, [rsi+1]
+vpand ymm13, ymm5, ymm13
+sub rax, r9
+sar rax, 1
+sar r12, 1
+vmovapd ymmword ptr [rsp+192], ymm13
+neg rsi
+vpmuldq ymm3, ymm8, ymm3
+cmp r10, 0
+cmovge r9, r11
+vpmuldq ymm1, ymm14, ymm1
+cmovl rax, r12
+cmovl rsi, r13
+vpaddq ymm1, ymm1, ymm3
+mov r10, qword ptr [rsp+8]
+mov r11, rax
+vpaddq ymm4, ymm1, ymm4
+lea r12, [rax+r9]
+test rax, 1
+vpaddq ymm4, ymm2, ymm4
+cmovne r10, rsi
+cmove r12, rax
+vpaddq ymm1, ymm0, ymm4
+lea r13, [rsi+1]
+sub rax, r9
+vpsrlq ymm1, ymm1, 30
+sar rax, 1
+vpand ymm6, ymm5, ymm6
+sar r12, 1
+neg rsi
+cmp r10, 0
+vmovapd ymmword ptr [rsp+224], ymm6
+cmovge r9, r11
+vmovapd ymm2, ymmword ptr [rsp+384]
+cmovl rax, r12
+cmovl rsi, r13
+
+_extract_init:
+mov r10, qword ptr [inv_round41+REG_REL]
+lea r11, [rax+r10]
+vmovapd ymm3, ymmword ptr [rsp+512]
+vpaddq ymm6, ymm0, ymm1
+sar r11, 42
+mov r12, rdx
+vpsrlq ymm6, ymm6, 15
+imul rdx, r11
+lea r10, [r9+r10]
+vpsubq ymm6, ymm6, ymm3
+sar r10, 42
+imul r12, r10
+vpsubq ymm1, ymm1, ymmword ptr [rsp+480]
+mov r13, qword ptr [inv_round20+REG_REL]
+lea rax, [rax+r13]
+vpand ymm4, ymm5, ymm4
+shl rax, 22
+sar rax, 43
+vpand ymm1, ymm2, ymm1
+mov r14, rdi
+imul r14, rax
+vpmuldq ymm2, ymm6, ymmword ptr [rsp+352]
+lea r9, [r9+r13]
+vpaddq ymm12, ymm2, ymm12
+shl r9, 22
+sar r9, 43
+imul rdi, r9
+vmovapd ymmword ptr [rsp+256], ymm4
+add rdi, r12
+add rdx, r14
+vmovapd ymmword ptr [rsp+288], ymm1
+sar rdi, 20
+vmovapd ymmword ptr [rsp+32], ymm12
+sar rdx, 20
+mov qword ptr [rsp+608], r10
+mov qword ptr [rsp+576], r9
+mov qword ptr [rsp+592], r11
+mov qword ptr [rsp+624], rax
+mov r9, 2
+
+_loop20:
+andn rax, rcx, rdi
+andn r10, rcx, rdx
+add rax, qword ptr [inv_bias41+REG_REL]
+add r10, qword ptr [inv_bias62+REG_REL]
+mov r11, 2
+
+_loop2:
+mov r12, -1
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, -1
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, qword ptr [rsp+8]
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+mov r12, -1
+mov r13, r10
+lea r14, [r10+rax]
+test r10, 1
+cmovne r12, rsi
+cmove r14, r10
+lea r15, [rsi+1]
+sub r10, rax
+sar r10, 1
+sar r14, 1
+neg rsi
+cmp r12, 0
+cmovge rax, r13
+cmovl r10, r14
+cmovl rsi, r15
+dec r11
+jne _loop2
+dec r9
+je _lastloop
+
+_extract:
+mov r11, qword ptr [inv_round41+REG_REL]
+lea r12, [r10+r11]
+sar r12, 42
+mov r13, rdx
+imul rdx, r12
+lea r11, [rax+r11]
+sar r11, 42
+imul r13, r11
+mov r14, qword ptr [inv_round20+REG_REL]
+lea r10, [r10+r14]
+shl r10, 22
+sar r10, 43
+mov r15, rdi
+imul r15, r10
+lea rax, [rax+r14]
+shl rax, 22
+sar rax, 43
+imul rdi, rax
+add rdi, r13
+add rdx, r15
+sar rdi, 20
+sar rdx, 20
+mov r13, qword ptr [rsp+576]
+imul r13, rax
+mov r14, qword ptr [rsp+624]
+imul r14, r11
+mov r15, qword ptr [rsp+608]
+imul rax, r15
+mov rbx, qword ptr [rsp+592]
+imul r11, rbx
+imul r15, r10
+imul rbx, r12
+imul r10, qword ptr [rsp+576]
+imul r12, qword ptr [rsp+624]
+add r11, rax
+lea rax, [r13+r14+0]
+add r10, r12
+lea r12, [r15+rbx]
+
+_first_loop:
+mov qword ptr [rsp+608], r11
+mov qword ptr [rsp+576], rax
+mov qword ptr [rsp+592], r12
+mov qword ptr [rsp+624], r10
+jmp _loop20
+
+_lastloop:
+mov rdi, qword ptr [inv_round41+REG_REL]
+lea rdx, [r10+rdi]
+sar rdx, 42
+lea r11, [rax+rdi]
+sar r11, 42
+mov rdi, qword ptr [rsp+624]
+imul rdi, r11
+mov r9, qword ptr [rsp+592]
+imul r11, r9
+imul r9, rdx
+mov r12, qword ptr [inv_round20+REG_REL]
+lea r13, [r10+r12]
+shl r13, 22
+sar r13, 43
+lea rax, [rax+r12]
+shl rax, 22
+sar rax, 43
+mov r10, qword ptr [rsp+576]
+imul r10, rax
+mov r12, qword ptr [rsp+608]
+imul rax, r12
+imul r12, r13
+imul rdx, qword ptr [rsp+624]
+imul r13, qword ptr [rsp+576]
+add r11, rax
+lea r10, [r10+rdi]
+add r13, rdx
+lea r12, [r12+r9]
+mov rdi, qword ptr [rsp+640]
+mov r14, qword ptr [rsp+656]
+mov r9, qword ptr [rsp+672]
+mov r15, qword ptr [rsp+688]
+dec r8
+jne _bigloop
+shl r9, 60
+shl r15, 60
+add rdi, r9
+add r14, r15
+imul rdi, r10
+imul r14, r11
+lea rdi, [rdi+r14]
+sar rdi, 60
+imul r10, rdi
+imul r11, rdi
+
+_cneg:
+mov rax, qword ptr [rsp+296]
+imul r10
+mov r9, rdx
+mov rbp, rax
+mov rax, qword ptr [rsp+312]
+imul r11
+add rbp, rax
+adc r9, rdx
+shld r9, rbp, 48
+shl rbp, 48
+mov rax, qword ptr [rsp+232]
+mov rdx, qword ptr [rsp+264]
+shl rdx, 30
+add rax, rdx
+imul r10
+mov rcx, rdx
+mov r8, rax
+mov rax, qword ptr [rsp+248]
+mov rdx, qword ptr [rsp+280]
+shl rdx, 30
+add rax, rdx
+imul r11
+add r8, rax
+adc rcx, rdx
+mov rbx, r8
+shrd r8, rcx, 12
+shl rbx, 52
+sar rcx, 12
+add rbp, r8
+adc r9, rcx
+mov rax, qword ptr [rsp+168]
+mov rdx, qword ptr [rsp+200]
+shl rdx, 30
+add rax, rdx
+imul r10
+mov rcx, rdx
+mov r8, rax
+mov rax, qword ptr [rsp+184]
+mov rdx, qword ptr [rsp+216]
+shl rdx, 30
+add rax, rdx
+imul r11
+add r8, rax
+adc rcx, rdx
+mov rdi, r8
+shrd r8, rcx, 8
+shl rdi, 56
+mov rdx, rcx
+sar rcx, 8
+sar rdx, 63
+add rbx, r8
+adc rbp, rcx
+adc r9, rdx
+mov rax, qword ptr [rsp+104]
+mov rdx, qword ptr [rsp+136]
+shl rdx, 30
+add rax, rdx
+imul r10
+mov rcx, rdx
+mov r8, rax
+mov rax, qword ptr [rsp+120]
+mov rdx, qword ptr [rsp+152]
+shl rdx, 30
+add rax, rdx
+imul r11
+add r8, rax
+adc rcx, rdx
+mov rsi, r8
+shrd r8, rcx, 4
+shl rsi, 60
+mov rdx, rcx
+sar rcx, 4
+sar rdx, 63
+add rdi, r8
+adc rbx, rcx
+adc rbp, rdx
+adc r9, rdx
+mov rax, qword ptr [rsp+40]
+mov rdx, qword ptr [rsp+72]
+shl rdx, 30
+add rax, rdx
+imul r10
+mov rcx, rdx
+mov r8, rax
+mov rax, qword ptr [rsp+56]
+mov rdx, qword ptr [rsp+88]
+shl rdx, 30
+add rax, rdx
+imul r11
+add r8, rax
+adc rcx, rdx
+mov rdx, rcx
+sar rdx, 63
+add rsi, r8
+adc rdi, rcx
+adc rbx, rdx
+adc rbp, rdx
+adc r9, rdx
+btr rbp, 63
+adc r9, r9
+mov rcx, r9
+mov rax, 19
+imul r9
+sar rcx, 63
+xor r9, r9
+add rsi, rax
+adc rdi, rdx
+adc rbx, rcx
+adc rbp, rcx
+adc r9, rcx
+btr rbp, 63
+adc r9, r9
+mov rcx, r9
+mov rax, 19
+imul r9
+sar rcx, 63
+add rsi, rax
+adc rdi, rdx
+adc rbx, rcx
+adc rbp, rcx
+adc r9, rcx
+xor r9, r9
+mov rdx, -19
+mov rcx, -1
+mov r8, 9223372036854775807
+cmp rbp, 0
+cmovge rdx, r9
+cmovge rcx, r9
+cmovge r8, r9
+add rsi, rdx
+adc rdi, rcx
+adc rbx, rcx
+adc rbp, r8
+add rsi, 19
+adc rdi, 0
+adc rbx, 0
+adc rbp, 0
+mov r9, rbp
+sar r9, 63
+btr rbp, 63
+and r9, 19
+add rsi, r9
+adc rdi, 0
+adc rbx, 0
+adc rbp, 0
+sub rsi, 19
+sbb rdi, 0
+sbb rbx, 0
+sbb rbp, 0
+
+;# inverse in: rbp rbx rdi rsi
 ;# result ← X2 · Z2^(-1)
 
-;# result in: r8, r9, r10, r11
-;# Stack variables:
-;# 0   T0
-;# 32  T1
-;# 64  T2
-;# 96  T3
-;# 128 T4
-;# 352 invtable position (4 bytes)
+xor     r13d, r13d
+mov     rdx, qword ptr [rsp+704]
+mulx    r9, r8, rsi
+mulx    r10, rcx, rdi
+adcx    r9, rcx
+mulx    r11, rcx, rbx
+adcx    r10, rcx
+mulx    r12, rcx, rbp
+adcx    r11, rcx
+adcx    r12, r13 ;# zero
+xor     r14d, r14d
+mov     rdx, qword ptr [rsp+712]
+mulx    rax, rcx, rsi
+adcx    r9, rcx
+adox    r10, rax
+mulx    rax, rcx, rdi
+adcx    r10, rcx
+adox    r11, rax
+mulx    rax, rcx, rbx
+adcx    r11, rcx
+adox    r12, rax
+mulx    rax, rcx, rbp
+adcx    r12, rcx
+adox    r13, rax
+adcx    r13, r14 ;# zero
+xor     r15d, r15d
+mov     rdx, qword ptr [rsp+720]
+mulx    rax, rcx, rsi
+adcx    r10, rcx
+adox    r11, rax
+mulx    rax, rcx, rdi
+adcx    r11, rcx
+adox    r12, rax
+mulx    rax, rcx, rbx
+adcx    r12, rcx
+adox    r13, rax
+mulx    rax, rcx, rbp
+adcx    r13, rcx
+adox    r14, rax
+adcx    r14, r15 ;# zero
+xor     eax, eax
+mov     rdx, qword ptr [rsp+728]
+mulx    rax, rcx, rsi
+adcx    r11, rcx
+adox    r12, rax
+mulx    rax, rcx, rdi
+adcx    r12, rcx
+adox    r13, rax
+mulx    rax, rcx, rbx
+adcx    r13, rcx
+adox    r14, rax
+mulx    rax, rcx, rbp
+adcx    r14, rcx
+adox    r15, rax
+adc     r15, 0
+xor     ebp, ebp
+mov     rdx, 38
+mulx    r12, rax, r12
+adcx    r8, rax
+adox    r9, r12
+mulx    r13, rcx, r13
+adcx    r9, rcx
+adox    r10, r13
+mulx    r14, rcx, r14
+adcx    r10, rcx
+adox    r11, r14
+mulx    r15, rcx, r15
+adcx    r11, rcx
+adox    r15, rbp ;# zero
+adcx    r15, rbp ;# zero
+shld    r15, r11, 1
+btr     r11, 63
+imul    r15, r15, 19
+add     r8, r15
+adc     r9, 0
+adc     r10, 0
+adc     r11, 0
 
-;# T0 ← X2
-mov    qword ptr [rsp+0], rsi
-mov    qword ptr [rsp+8], rbp
-mov    qword ptr [rsp+16], rcx
-mov    qword ptr [rsp+24], rax
-
-;# T2 ← Z2
-mov    qword ptr [rsp+64], r8
-mov    qword ptr [rsp+72], r9
-mov    qword ptr [rsp+80], r10
-mov    qword ptr [rsp+88], r11
-
-mov    dword ptr [rsp+352], 0
-lea    r12, [invtable+REG_REL]
-
-inv_loop_x:
-;# ecx = current instruction
-mov    ecx, dword ptr [r12]
-test   cl, cl
-jz     skip_square_x
-
-square_loop_x:
-xor    r13d, r13d
-mov    rdx, r8
-mulx   rax, rbp, r9
-mulx   rsi, rdi, r10
-adcx   rax, rdi
-mulx   r12, rdi, r11
-adcx   rsi, rdi
-adcx   r12, r13
-mov    rdx, r9
-xor    r14d, r14d
-mulx   rdx, rdi, r10
-adcx   rsi, rdi
-adox   r12, rdx
-mov    rdx, r9
-mulx   rdx, rdi, r11
-adcx   r12, rdi
-adox   r13, rdx
-adcx   r13, r14
-xor    r15d, r15d
-mov    rdx, r10
-mulx   r14, rdi, r11
-adcx   r13, rdi
-adcx   r14, r15
-shld   r15, r14, 1
-shld   r14, r13, 1
-shld   r13, r12, 1
-shld   r12, rsi, 1
-shld   rsi, rax, 1
-shld   rax, rbp, 1
-shl    rbp, 1
-xor    edx, edx
-mov    rdx, r8
-mulx   rdx, rbx, rdx
-adcx   rbp, rdx
-mov    rdx, r9
-mulx   rdx, rdi, rdx
-adcx   rax, rdi
-adcx   rsi, rdx
-mov    rdx, r10
-mulx   rdx, rdi, rdx
-adcx   r12, rdi
-adcx   r13, rdx
-mov    rdx, r11
-mulx   rdx, rdi, rdx
-adcx   r14, rdi
-adcx   r15, rdx
-;# xor    r9d, r9d
-mov    rdx, 38
-mulx   r9, r8, r12
-xor    r12d, r12d
-adcx   r8, rbx
-adox   r9, rbp
-mulx   r10, rdi, r13
-adcx   r9, rdi
-adox   r10, rax
-mulx   r11, rdi, r14
-adcx   r10, rdi
-adox   r11, rsi
-mulx   r15, rdi, r15
-adcx   r11, rdi
-adox   r15, r12 ;# zero
-adcx   r15, r12 ;# zero
-shld   r15, r11, 1
-btr    r11, 63
-imul   r15, r15, 19
-add    r8, r15
-adc    r9, 0
-adc    r10, 0
-adc    r11, 0
-sub    cl, 1
-jnz    square_loop_x
-
-skip_square_x:
-shr    ecx, 8
-test   cl, cl
-jnz    skip_mul_x
-
-;# T4 ← result
-lea    rbx, [rsp+128]
-mov    qword ptr [rbx], r8
-mov    qword ptr [rbx+8], r9
-mov    qword ptr [rbx+16], r10
-mov    qword ptr [rbx+24], r11
-
-movzx  edi, ch ;# mul_source
-shl    edi, 5
-add    rdi, rsp
-
-;# result ← T4 · mul_source
-xor    r13d, r13d
-mov    rdx, qword ptr [rbx]
-mulx   r9, r8, qword ptr [rdi]
-mulx   r10, rsi, qword ptr [rdi+8]
-adcx   r9, rsi
-mulx   r11, rsi, qword ptr [rdi+16]
-adcx   r10, rsi
-mulx   r12, rsi, qword ptr [rdi+24]
-adcx   r11, rsi
-adcx   r12, r13 ;# zero
-xor    r14d, r14d
-mov    rdx, qword ptr [rbx+8]
-mulx   rbp, rsi, qword ptr [rdi]
-adcx   r9, rsi
-adox   r10, rbp
-mulx   rbp, rsi, qword ptr [rdi+8]
-adcx   r10, rsi
-adox   r11, rbp
-mulx   rbp, rsi, qword ptr [rdi+16]
-adcx   r11, rsi
-adox   r12, rbp
-mulx   rbp, rsi, qword ptr [rdi+24]
-adcx   r12, rsi
-adox   r13, rbp
-adcx   r13, r14 ;#zero
-xor    r15d, r15d
-mov    rdx, qword ptr [rbx+16]
-mulx   rbp, rsi, qword ptr [rdi]
-adcx   r10, rsi
-adox   r11, rbp
-mulx   rbp, rsi, qword ptr [rdi+8]
-adcx   r11, rsi
-adox   r12, rbp
-mulx   rbp, rsi, qword ptr [rdi+16]
-adcx   r12, rsi
-adox   r13, rbp
-mulx   rbp, rsi, qword ptr [rdi+24]
-adcx   r13, rsi
-adox   r14, rbp
-adcx   r14, r15
-xor    eax, eax
-mov    rdx, qword ptr [rbx+24]
-mulx   rbp, rsi, qword ptr [rdi]
-adcx   r11, rsi
-adox   r12, rbp
-mulx   rbp, rsi, qword ptr [rdi+8]
-adcx   r12, rsi
-adox   r13, rbp
-mulx   rbp, rsi, qword ptr [rdi+16]
-adcx   r13, rsi
-adox   r14, rbp
-mulx   rbp, rsi, qword ptr [rdi+24]
-adcx   r14, rsi
-adox   r15, rbp
-adcx   r15, rax ;# zero
-xor    ebp, ebp
-mov    rdx, 38
-mulx   r12, rax, r12
-adcx   r8, rax
-adox   r9, r12
-mulx   r13, rsi, r13
-adcx   r9, rsi
-adox   r10, r13
-mulx   r14, rsi, r14
-adcx   r10, rsi
-adox   r11, r14
-mulx   r15, rsi, r15
-adcx   r11, rsi
-adox   r15, rbp ;# zero
-adcx   r15, rbp ;# zero
-shld   r15, r11, 1
-btr    r11, 63
-imul   r15, r15, 19
-add    r8, r15
-adc    r9, 0
-adc    r10, 0
-adc    r11, 0
-
-skip_mul_x:
-shr    ecx, 11
-jz     skip_store_x
-
-add    rcx, rsp
-
-;# store temp T[1-3]
-mov    qword ptr [rcx], r8
-mov    qword ptr [rcx+8], r9
-mov    qword ptr [rcx+16], r10
-mov    qword ptr [rcx+24], r11
-
-skip_store_x:
-mov    ebx, dword ptr [rsp+352]
-add    ebx, 4
-lea    r12, [invtable+REG_REL]
-add    r12, rbx
-mov    dword ptr [rsp+352], ebx
-
-cmp   ebx, 52
-jb    inv_loop_x
-
-;# final reduction
-
-xor    r12d, r12d
-btr    r11, 63
-adc    r12, 0
-imul   r12, r12, 19
-add    r8, r12
-adc    r9, 0
+;# final reduction to ensure 0 <= result < 2^255-19
 
 mov    rax, r8
 mov    rcx, r9
@@ -1454,7 +2363,7 @@ cmovb  r9, rcx
 cmovb  r10, rdx
 cmovb  r11, rsi
 
-mov    rdi, qword ptr [rsp+304]
+mov    rdi, qword ptr [rsp+752]
 
 ;# output the result
 mov    qword ptr [rdi], r8
@@ -1463,13 +2372,12 @@ mov    qword ptr [rdi+16], r10
 mov    qword ptr [rdi+24], r11
 
 ;# restore registers
-mov    rbx, qword ptr [rsp+288]
-mov    rbp, qword ptr [rsp+296]
-;# mov    rdi, qword ptr [rsp+304]
-;# mov    rsi, qword ptr [rsp+312]
-mov    r12, qword ptr [rsp+320]
-mov    r13, qword ptr [rsp+328]
-mov    r14, qword ptr [rsp+336]
-mov    r15, qword ptr [rsp+344]
+mov    rbx, qword ptr [rsp+736]
+mov    rbp, qword ptr [rsp+744]
+mov    r11, qword ptr [rsp+760]
+mov    r12, qword ptr [rsp+768]
+mov    r13, qword ptr [rsp+776]
+mov    r14, qword ptr [rsp+784]
+mov    r15, qword ptr [rsp+792]
 
-add    rsp, 392
+add    rsp, r11
