@@ -1,4 +1,4 @@
-;# Copyright (c) 2022 tevador <tevador@gmail.com>
+;# Copyright (c) 2022-2026 tevador <tevador@gmail.com>
 ;#
 ;# This file is part of mx25519, which is released under LGPLv3.
 ;# See LICENSE for full license details.
@@ -28,3 +28,12 @@ p12:
 db 255, 255, 255, 255, 255, 255, 255, 255
 p3:
 db 255, 255, 255, 255, 255, 255, 255, 127
+
+inv_bias62:  ;# 0xc000000000000000
+db 0, 0, 0, 0, 0, 0, 0, 192
+inv_round20: ;# 0x100000
+db 0, 0, 16, 0, 0, 0, 0, 0
+inv_bias41:  ;# 0xfffffe0000000000
+db 0, 0, 0, 0, 0, 254, 255, 255
+inv_round41: ;# 0x20000100000
+db 0, 0, 16, 0, 0, 2, 0, 0
