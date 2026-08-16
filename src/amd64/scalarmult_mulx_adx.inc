@@ -518,17 +518,17 @@ adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
 xor    r15d, r15d
+adox   r9, r9
+adox   r10, r10
 mov    rdx, rbp
+adox   r11, r11
+adox   r12, r12
 mulx   r14, rcx, rsi
 adcx   r13, rcx
+adox   r13, r13
 adcx   r14, r15
-shld   r15, r14, 1
-shld   r14, r13, 1
-shld   r13, r12, 1
-shld   r12, r11, 1
-shld   r11, r10, 1
-shld   r10, r9, 1
-shl    r9, 1
+adox   r14, r14
+adox   r15, r15
 xor    edx, edx
 mov    rdx, rax
 mulx   rdx, r8, rdx
@@ -591,17 +591,17 @@ adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
 xor    r15d, r15d
+adox   r9, r9
+adox   r10, r10
 mov    rdx, qword ptr [rsp+16]
+adox   r11, r11
+adox   r12, r12
 mulx   r14, rcx, qword ptr [rsp+24]
 adcx   r13, rcx
+adox   r13, r13
 adcx   r14, r15
-shld   r15, r14, 1
-shld   r14, r13, 1
-shld   r13, r12, 1
-shld   r12, r11, 1
-shld   r11, r10, 1
-shld   r10, r9, 1
-shl    r9, 1
+adox   r14, r14
+adox   r15, r15
 xor    edx, edx
 mov    rdx, qword ptr [rsp+0]
 mulx   rdx, r8, rdx
@@ -710,17 +710,17 @@ adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
 xor    r15d, r15d
+adox   r9, r9
+adox   r10, r10
 mov    rdx, rbp
+adox   r11, r11
+adox   r12, r12
 mulx   r14, rcx, rsi
 adcx   r13, rcx
+adox   r13, r13
 adcx   r14, r15
-shld   r15, r14, 1
-shld   r14, r13, 1
-shld   r13, r12, 1
-shld   r12, r11, 1
-shld   r11, r10, 1
-shld   r10, r9, 1
-shl    r9, 1
+adox   r14, r14
+adox   r15, r15
 xor    edx, edx
 mov    rdx, rax
 mulx   rdx, r8, rdx
@@ -783,17 +783,17 @@ adcx   r12, rcx
 adox   r13, rdi
 adcx   r13, r14
 xor    r15d, r15d
+adox   r9, r9
+adox   r10, r10
 mov    rdx, qword ptr [rsp+208]
+adox   r11, r11
+adox   r12, r12
 mulx   r14, rcx, qword ptr [rsp+216]
 adcx   r13, rcx
+adox   r13, r13
 adcx   r14, r15
-shld   r15, r14, 1
-shld   r14, r13, 1
-shld   r13, r12, 1
-shld   r12, r11, 1
-shld   r11, r10, 1
-shld   r10, r9, 1
-shl    r9, 1
+adox   r14, r14
+adox   r15, r15
 xor    edx, edx
 mov    rdx, qword ptr [rsp+192]
 mulx   rdx, r8, rdx
