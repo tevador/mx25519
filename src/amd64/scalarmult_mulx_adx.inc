@@ -46,58 +46,78 @@
 ;# 32-byte align rsp
 mov r11, rsp
 and r11, 31
-add r11, 416
+add r11, 800 ;# the stack frame size is stored in r11
 sub rsp, r11
-add r11, 384 ;# the secondary stack frame size is stored in r11
 
-;# [primary stack frame]
-;# (offsets from rsp)
-;# 416 alignment
-;# 352 saved registers: rbx, rbp, rdi, r11, r12, r13, r14, r15
-;# 320 private key
-;# 312 key byte index (4 bytes)
-;# 306 current key byte value (1 byte)
-;# 305 swap flag (1 byte)
-;# 304 key bit index (1 byte)
-;# 256 Z3
-;# 224 Z2
-;# 192 X3
-;# 160 X2
-;# 128 X1
-;# 96 T4
-;# 64 T3
-;# 32 T2
-;# 0 T1
+;# |-----------------|------------------------|----------------------|
+;# |                        Stack layout                             |
+;# |-----------------|------------------------|----------------------|
+;# | offset from rsp |       ladder           |      inversion       |
+;# |-----------------|------------------------|----------------------|
+;# |     800         |                   alignment                   |
+;# |-----------------|------------------------|----------------------|
+;# |     736         | saved: rbx, rbp, rdi, r11, r12, r13, r14, r15 |
+;# |-----------------|------------------------|----------------------|
+;# |     704         |      private key       |        X2            |
+;# |-----------------|------------------------|----------------------|
+;# |     316         |       (unused)         |                      |
+;# |-----------------|------------------------|                      |
+;# |     312         |   key byte index (4B)  |                      |
+;# |-----------------|------------------------|                      |
+;# |     306         |   key byte value (1B)  |                      |
+;# |-----------------|------------------------|                      |
+;# |     305         |   swap flag (1B)       |                      |
+;# |-----------------|------------------------|                      |
+;# |     304         |   key bit index (1B)   |                      |
+;# |-----------------|------------------------|                      |
+;# |     256         |          Z3            |                      |
+;# |-----------------|------------------------|                      |
+;# |     224         |          Z2            |                      |
+;# |-----------------|------------------------|    scratch space     |
+;# |     192         |          X3            |                      |
+;# |-----------------|------------------------|                      |
+;# |     160         |          X2            |                      |
+;# |-----------------|------------------------|                      |
+;# |     128         |          X1            |                      |
+;# |-----------------|------------------------|                      |
+;# |      96         |          T4            |                      |
+;# |-----------------|------------------------|                      |
+;# |      64         |          T3            |                      |
+;# |-----------------|------------------------|                      |
+;# |      32         |          T2            |                      |
+;# |-----------------|------------------------|                      |
+;# |       0         |          T1            |                      |
+;# |-----------------|------------------------|----------------------|
 
-mov    qword ptr [rsp+352], rbx
-mov    qword ptr [rsp+360], rbp
-mov    qword ptr [rsp+368], rdi
-mov    qword ptr [rsp+376], r11
-mov    qword ptr [rsp+384], r12
-mov    qword ptr [rsp+392], r13
-mov    qword ptr [rsp+400], r14
-mov    qword ptr [rsp+408], r15
+mov    qword ptr [rsp+736], rbx
+mov    qword ptr [rsp+744], rbp
+mov    qword ptr [rsp+752], rdi
+mov    qword ptr [rsp+760], r11
+mov    qword ptr [rsp+768], r12
+mov    qword ptr [rsp+776], r13
+mov    qword ptr [rsp+784], r14
+mov    qword ptr [rsp+792], r15
 
 ;# copy the private key and clamp it
 shl    r8, 56
 or     rcx, -8
 mov    r9, qword ptr [rsi+24]
 or     r9, r8
-mov    qword ptr [rsp+344], r9
+mov    qword ptr [rsp+728], r9
 mov    r8, qword ptr [rsi]
 and    r8, rcx
-mov    qword ptr [rsp+320], r8
+mov    qword ptr [rsp+704], r8
 mov    r8, qword ptr [rsi+8]
-mov    qword ptr [rsp+328], r8
+mov    qword ptr [rsp+712], r8
 mov    r8, qword ptr [rsi+16]
-mov    qword ptr [rsp+336], r8
+mov    qword ptr [rsp+720], r8
 
 ;# starting from bit 6 of the 31st byte
 mov    eax, 31
 mov    byte ptr [rsp+304], 6
 mov    byte ptr [rsp+305], 0
 mov    dword ptr [rsp+312], eax
-lea    rsi, [rsp+320]
+lea    rsi, [rsp+704]
 
 ;# load XP
 mov    r8, qword ptr [rdx]
@@ -1169,7 +1189,7 @@ mov    byte ptr [rsp+304], cl
 jge    loop_bit_x
 
 mov    byte ptr [rsp+304], 7
-lea    rsi, [rsp+320]
+lea    rsi, [rsp+704]
 mov    eax, dword ptr [rsp+312]
 sub    eax, 1
 mov    dword ptr [rsp+312], eax
@@ -1211,19 +1231,10 @@ cmove  r10, r14
 cmove  r11, r15
 
 ;# overwrite the private key on the stack with X2
-mov    qword ptr [rsp+320], rsi
-mov    qword ptr [rsp+328], rbp
-mov    qword ptr [rsp+336], rcx
-mov    qword ptr [rsp+344], rax
-
-sub    rsp, 384
-
-;# [secondary stack frame]
-;# (offsets from rsp)
-;# 800 alignment
-;# 736 saved registers: rbx, rbp, rdi, r11, r12, r13, r14, r15
-;# 704 X2
-;# (0-703) scratch space
+mov    qword ptr [rsp+704], rsi
+mov    qword ptr [rsp+712], rbp
+mov    qword ptr [rsp+720], rcx
+mov    qword ptr [rsp+728], rax
 
 ;# Z2 in: r8, r9, r10, r11
 ;# begin inversion
