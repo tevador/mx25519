@@ -40,8 +40,6 @@
 ;#     rdi -> public key address (out)
 ;#     rsi -> private key address (in)
 ;#     rdx -> base point address (in)
-;#     rcx -> lo byte clamping mask
-;#     r8  -> hi byte clamping mask
 
 ;# 32-byte align rsp
 mov r11, rsp
@@ -58,10 +56,8 @@ sub rsp, r11
 ;# |-----------------|------------------------|----------------------|
 ;# |     736         | saved: rbx, rbp, rdi, r11, r12, r13, r14, r15 |
 ;# |-----------------|------------------------|----------------------|
-;# |     704         |      private key       |        X2            |
+;# |     704         | saved: rsi             |        X2            |
 ;# |-----------------|------------------------|----------------------|
-;# |     316         |       (unused)         |                      |
-;# |-----------------|------------------------|                      |
 ;# |     312         |   key byte index (4B)  |                      |
 ;# |-----------------|------------------------|                      |
 ;# |     306         |   key byte value (1B)  |                      |
@@ -98,26 +94,15 @@ mov    qword ptr [rsp+776], r13
 mov    qword ptr [rsp+784], r14
 mov    qword ptr [rsp+792], r15
 
-;# copy the private key and clamp it
-shl    r8, 56
-or     rcx, -8
-mov    r9, qword ptr [rsi+24]
-or     r9, r8
-mov    qword ptr [rsp+728], r9
-mov    r8, qword ptr [rsi]
-and    r8, rcx
-mov    qword ptr [rsp+704], r8
-mov    r8, qword ptr [rsi+8]
-mov    qword ptr [rsp+712], r8
-mov    r8, qword ptr [rsi+16]
-mov    qword ptr [rsp+720], r8
+;# save the private key address
+mov    qword ptr [rsp+704], rsi
 
 ;# starting from bit 6 of the 31st byte
 mov    eax, 31
 mov    byte ptr [rsp+304], 6
 mov    byte ptr [rsp+305], 0
 mov    dword ptr [rsp+312], eax
-lea    rsi, [rsp+704]
+mov    rsi, qword ptr [rsp+704]
 
 ;# load XP
 mov    r8, qword ptr [rdx]
@@ -1189,12 +1174,15 @@ mov    byte ptr [rsp+304], cl
 jge    loop_bit_x
 
 mov    byte ptr [rsp+304], 7
-lea    rsi, [rsp+704]
+mov    rsi, qword ptr [rsp+704]
 mov    eax, dword ptr [rsp+312]
 sub    eax, 1
 mov    dword ptr [rsp+312], eax
 ;# cmp    eax, 0
 jge    loop_byte_x
+
+;# remove the private key byte from the stack
+mov    byte ptr [rsp+306], 0
 
 ;# load select, AKA the LSB, then remove
 ;# needed to support privkeys wth unclamped LSB
@@ -1230,7 +1218,7 @@ cmove  r9, r13
 cmove  r10, r14
 cmove  r11, r15
 
-;# overwrite the private key on the stack with X2
+;# save X2
 mov    qword ptr [rsp+704], rsi
 mov    qword ptr [rsp+712], rbp
 mov    qword ptr [rsp+720], rcx

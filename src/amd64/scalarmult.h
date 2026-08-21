@@ -10,15 +10,11 @@
 #include <stdint.h>
 
 void mx25519_scalarmult_amd64(uint8_t* q,
-    const uint8_t* n,
-    const uint8_t* p,
-    uint8_t clamp_lo,
-    uint8_t clamp_hi);
+    const uint8_t* e,
+    const uint8_t* p);
 
 void mx25519_scalarmult_amd64x(uint8_t* q,
-    const uint8_t* n,
-    const uint8_t* p,
-    uint8_t clamp_lo,
-    uint8_t clamp_hi);
+    const uint8_t* e,
+    const uint8_t* p);
 
 #endif

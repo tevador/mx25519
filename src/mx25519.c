@@ -62,13 +62,10 @@ static mx25519_type select_best_impl(void) {
 #endif
 }
 
-static void clamp_and_dispatch(const mx25519_impl* impl,
+static inline void dispatch(const mx25519_impl* impl,
     mx25519_pubkey* result, const mx25519_privkey* key,
-    const mx25519_pubkey* pt, mx25519_unclamp_flags unclamp_flags)
+    const mx25519_pubkey* pt)
 {
-    const uint8_t lsb_mask = 248 | ((unclamp_flags & MX25519_UNCLAMP_LSBS) * 7);
-    const uint8_t msb_mask = (~unclamp_flags & MX25519_UNCLAMP_254) << 5;
-
     assert(impl != NULL);
     assert(pt != NULL);
     assert(key != NULL);
@@ -77,7 +74,7 @@ static void clamp_and_dispatch(const mx25519_impl* impl,
     assert(impl->type <= MX25519_TYPE_AMD64X);
 
     /* dispatch */
-    impl->scmul(result->data, key->data, pt->data, lsb_mask, msb_mask);
+    impl->scmul(result->data, key->data, pt->data);
 }
 
 const mx25519_impl* mx25519_select_impl(mx25519_type type)
@@ -98,28 +95,24 @@ mx25519_type mx25519_impl_type(const mx25519_impl* impl)
     return impl->type;
 }
 
-void mx25519_scmul_base(const mx25519_impl* impl, mx25519_pubkey* result,
-    const mx25519_privkey* key)
-{
-    clamp_and_dispatch(impl, result, key, &x25519_base, MX25519_UNCLAMP_NONE);
-}
-
 void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key,
-    mx25519_unclamp_flags unclamp_flags)
+    mx25519_pubkey* result, const mx25519_privkey* key)
 {
-    clamp_and_dispatch(impl, result, key, &x25519_base, unclamp_flags);
-}
-
-void mx25519_scmul_key(const mx25519_impl* impl, mx25519_pubkey* result,
-    const mx25519_privkey* key, const mx25519_pubkey* pt)
-{
-    clamp_and_dispatch(impl, result, key, pt, MX25519_UNCLAMP_NONE);
+    dispatch(impl, result, key, &x25519_base);
 }
 
 void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
     mx25519_pubkey* result, const mx25519_privkey* key,
-    const mx25519_pubkey* pt, mx25519_unclamp_flags unclamp_flags)
+    const mx25519_pubkey* pt)
 {
-    clamp_and_dispatch(impl, result, key, pt, unclamp_flags);
+    dispatch(impl, result, key, pt);
+}
+
+void mx25519_key_clamp_rfc7748(mx25519_privkey* key)
+{
+    assert(key != NULL);
+
+    key->data[0] &= 248;
+    key->data[31] &= 127;
+    key->data[31] |= 64;
 }

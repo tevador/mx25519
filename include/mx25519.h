@@ -48,21 +48,6 @@ typedef enum mx25519_type {
     MX25519_TYPE_AMD64X,    /* AMD64 assembly with MULX+ADX */
 } mx25519_type;
 
-/*
- * Private key unclamp types.
- *
- * Please only use these flags if you know what you are doing. Using unclamped
- * keys may produce incorrect results, or enable certain classes of
- * cryptographic vulnerabilities. This library does not allow unclamping the
- * 255th bit.
- */
-typedef enum mx25519_unclamp_flags {
-    MX25519_UNCLAMP_NONE = 0, /* Fully clamped key, conforming to RFC 7748 */
-    MX25519_UNCLAMP_LSBS = 1, /* Unclamp the 3 LSBs, allowing 1s */
-    MX25519_UNCLAMP_254  = 2, /* Unclamp the 254th bit, allowing a 0 */
-    MX25519_UNCLAMP_ALL  = MX25519_UNCLAMP_LSBS | MX25519_UNCLAMP_254
-} mx25519_unclamp_flags;
-
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define MX25519_WIN
 #endif
@@ -111,30 +96,21 @@ MX25519_API mx25519_type mx25519_impl_type(const mx25519_impl* impl);
 
 /*
  * Calculates x(key*G), where G is the generator point of Curve25519.
+ * The private key is treated as a 255-bit little-endian integer.
+ * Bit 255 is ignored. No clamping is applied to bits 0-254.
  *
  * @param impl is a pointer to an implementation. Must not be NULL.
  * @param result is the pointer where the resulting public key will be stored.
  *        Must not be NULL.
  * @param key is a pointer to the private key. Must not be NULL.
  */
-MX25519_API void mx25519_scmul_base(const mx25519_impl* impl,
+MX25519_API void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
     mx25519_pubkey* result, const mx25519_privkey* key);
 
 /*
- * Like `mx25519_scmul_base()`, but with RFC 7748 non-compliant clamping.
- *
- * @param impl is a pointer to an implementation. Must not be NULL.
- * @param result is the pointer where the resulting public key will be stored.
- *        Must not be NULL.
- * @param key is a pointer to the private key. Must not be NULL.
- * @param unclamp_flags is flags to describe the bits of the `key` to unclamp
- */
-MX25519_API void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key,
-    mx25519_unclamp_flags unclamp_flags);
-
-/*
  * Calculates x(key*P), where P is a given public key.
+ * The private key is treated as a 255-bit little-endian integer.
+ * Bit 255 is ignored. No clamping is applied to bits 0-254.
  *
  * @param impl is a pointer to an implementation. Must not be NULL.
  * @param result is the pointer where the resulting public key will be stored.
@@ -142,23 +118,18 @@ MX25519_API void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
  * @param key is a pointer to the private key. Must not be NULL.
  * @param p is a pointer to the base point P. Must not be NULL.
  */
-MX25519_API void mx25519_scmul_key(const mx25519_impl* impl,
+MX25519_API void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
     mx25519_pubkey* result, const mx25519_privkey* key,
     const mx25519_pubkey* p);
 
 /*
- * Like `mx25519_scmul_key()`, but with RFC 7748 non-compliant clamping.
+ * Applies RFC 7748 clamping to the key.
+ * Should be called before mx25519_scmul_base_unclamped and
+ * mx25519_scmul_key_unclamped if RFC 7748 compliance is required.
  *
- * @param impl is a pointer to an implementation. Must not be NULL.
- * @param result is the pointer where the resulting public key will be stored.
- *        Must not be NULL.
  * @param key is a pointer to the private key. Must not be NULL.
- * @param p is a pointer to the base point P. Must not be NULL.
- * @param unclamp_flags is flags to describe the bits of the `key` to unclamp
  */
-MX25519_API void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key,
-    const mx25519_pubkey* p, mx25519_unclamp_flags unclamp_flags);
+MX25519_API void mx25519_key_clamp_rfc7748(mx25519_privkey* key);
 
 #ifdef __cplusplus
 }

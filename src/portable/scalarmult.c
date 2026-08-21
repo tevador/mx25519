@@ -8,13 +8,9 @@
 #include "fe.h"
 
 void mx25519_scalarmult_portable(uint8_t* q,
-    const uint8_t* n,
-    const uint8_t* p,
-    const uint8_t clamp_lo,
-    const uint8_t clamp_hi)
+    const uint8_t* e,
+    const uint8_t* p)
 {
-    uint8_t e[32];
-    unsigned int i;
     fe x1;
     fe x2;
     fe z2;
@@ -23,13 +19,9 @@ void mx25519_scalarmult_portable(uint8_t* q,
     fe tmp0;
     fe tmp1;
     int pos;
-    unsigned int swap;
-    unsigned int b;
+    volatile unsigned int swap;
+    volatile unsigned int b;
 
-    for (i = 0; i < 32; ++i) e[i] = n[i];
-    e[0] &= clamp_lo;
-    e[31] |= clamp_hi;
-    // bit 255 is cleared implicitly by virtue of ignoring it
     fe_frombytes(x1, p);
     fe_1(x2);
     fe_0(z2);
@@ -38,8 +30,7 @@ void mx25519_scalarmult_portable(uint8_t* q,
 
     swap = 0;
     for (pos = 254; pos >= 0; --pos) {
-        b = e[pos / 8] >> (pos & 7);
-        b &= 1;
+        b = (e[pos / 8] >> (pos & 7)) & 1;
         swap ^= b;
         fe_cswap(x2, x3, swap);
         fe_cswap(z2, z3, swap);
@@ -71,4 +62,8 @@ void mx25519_scalarmult_portable(uint8_t* q,
     fe_invert(z2, z2);
     fe_mul(x2, x2, z2);
     fe_tobytes(q, x2);
+
+    /* clear the last key bit, works due to being a volatile store */
+    swap = 0;
+    b = 0;
 }
