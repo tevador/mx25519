@@ -72,7 +72,24 @@ static inline void hex2bin(const char* in, int length, uint8_t* out) {
 }
 
 #define KEY_SIZE 32
-#define load_key(key, hex) hex2bin(hex, 2 * KEY_SIZE, key.data)
+
+typedef void clamp_func(mx25519_privkey* key);
+
+static void no_clamping(mx25519_privkey* key) {
+}
+
+static void torsion_clamping(mx25519_privkey* key) {
+    key->data[0] &= 248;
+}
+
+static void load_privkey(mx25519_privkey* key, const char* hex, clamp_func* clamping) {
+    hex2bin(hex, 2 * KEY_SIZE, key->data);
+    clamping(key);
+}
+
+static void load_pubkey(mx25519_pubkey* pubkey, const char* hex) {
+    hex2bin(hex, 2 * KEY_SIZE, pubkey->data);
+}
 
 static inline bool equals_hex(const void* val, const char* hex) {
     unsigned char reference[KEY_SIZE];
@@ -81,36 +98,36 @@ static inline bool equals_hex(const void* val, const char* hex) {
 }
 
 static bool check_scmul_unclamped(const char* key_hex, const char* pt_hex,
-    const char* res_hex, mx25519_unclamp_flags unclamp_flags)
+    const char* res_hex, clamp_func* clamping)
 {
     assert(impl != NULL);
     mx25519_privkey key;
-    load_key(key, key_hex);
+    load_privkey(&key, key_hex, clamping);
     mx25519_pubkey pt;
-    load_key(pt, pt_hex);
+    load_pubkey(&pt, pt_hex);
     mx25519_pubkey res;
-    mx25519_scmul_key_unclamped(impl , &res, &key, &pt, unclamp_flags);
+    mx25519_scmul_key_unclamped(impl , &res, &key, &pt);
     return equals_hex(res.data, res_hex);
 }
 
 static bool check_scmul(const char* key_hex, const char* pt_hex, const char* res_hex) {
-    return check_scmul_unclamped(key_hex, pt_hex, res_hex, MX25519_UNCLAMP_NONE);
+    return check_scmul_unclamped(key_hex, pt_hex, res_hex, &mx25519_key_clamp_rfc7748);
 }
 
 static void check_dh() {
     assert(impl != NULL);
     mx25519_privkey alice_priv, bob_priv;
-    load_key(alice_priv, rfc7748_alice_priv);
-    load_key(bob_priv, rfc7748_bob_priv);
+    load_privkey(&alice_priv, rfc7748_alice_priv, &mx25519_key_clamp_rfc7748);
+    load_privkey(&bob_priv, rfc7748_bob_priv, &mx25519_key_clamp_rfc7748);
     mx25519_pubkey alice_pub, bob_pub;
-    mx25519_scmul_base(impl, &alice_pub, &alice_priv);
+    mx25519_scmul_base_unclamped(impl, &alice_pub, &alice_priv);
     assert(equals_hex(&alice_pub, rfc7748_alice_pub));
-    mx25519_scmul_base(impl, &bob_pub, &bob_priv);
+    mx25519_scmul_base_unclamped(impl, &bob_pub, &bob_priv);
     assert(equals_hex(&bob_pub, rfc7748_bob_pub));
     mx25519_pubkey alice_shared, bob_shared;
-    mx25519_scmul_key(impl, &alice_shared, &alice_priv, &bob_pub);
+    mx25519_scmul_key_unclamped(impl, &alice_shared, &alice_priv, &bob_pub);
     assert(equals_hex(&alice_shared, rfc7748_shared));
-    mx25519_scmul_key(impl, &bob_shared, &bob_priv, &alice_pub);
+    mx25519_scmul_key_unclamped(impl, &bob_shared, &bob_priv, &alice_pub);
     assert(equals_hex(&bob_shared, rfc7748_shared));
 }
 
@@ -149,7 +166,7 @@ static bool test_scmul3_portable() {
 }
 
 static bool test_scmul4_portable() {
-    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, &torsion_clamping));
     return true;
 }
 
@@ -167,7 +184,7 @@ static bool test_mul_base_times1_portable() {
     const mx25519_privkey one = {.data = {1}};
     const mx25519_pubkey B = {.data = {9}};
     mx25519_pubkey B1;
-    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+    mx25519_scmul_base_unclamped(impl, &B1, &one);
 
     assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
@@ -215,7 +232,7 @@ static bool test_scmul4_arm64() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, &torsion_clamping));
     return true;
 }
 
@@ -236,7 +253,7 @@ static bool test_mul_base_times1_arm64() {
     const mx25519_privkey one = {.data = {1}};
     const mx25519_pubkey B = {.data = {9}};
     mx25519_pubkey B1;
-    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+    mx25519_scmul_base_unclamped(impl, &B1, &one);
 
     assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
@@ -284,7 +301,7 @@ static bool test_scmul4_amd64() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, &torsion_clamping));
     return true;
 }
 
@@ -305,7 +322,7 @@ static bool test_mul_base_times1_amd64() {
     const mx25519_privkey one = {.data = {1}};
     const mx25519_pubkey B = {.data = {9}};
     mx25519_pubkey B1;
-    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+    mx25519_scmul_base_unclamped(impl, &B1, &one);
 
     assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;
@@ -353,7 +370,7 @@ static bool test_scmul4_amd64x() {
     if (impl == NULL) {
         return false;
     }
-    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, MX25519_UNCLAMP_254));
+    assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, &torsion_clamping));
     return true;
 }
 
@@ -374,7 +391,7 @@ static bool test_mul_base_times1_amd64x() {
     const mx25519_privkey one = {.data = {1}};
     const mx25519_pubkey B = {.data = {9}};
     mx25519_pubkey B1;
-    mx25519_scmul_base_unclamped(impl, &B1, &one, MX25519_UNCLAMP_ALL);
+    mx25519_scmul_base_unclamped(impl, &B1, &one);
 
     assert(memcmp(&B1, &B, sizeof(B)) == 0);
     return true;

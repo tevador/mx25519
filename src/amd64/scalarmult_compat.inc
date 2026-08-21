@@ -40,57 +40,57 @@
 ;#     rdi -> public key address (out)
 ;#     rsi -> private key address (in)
 ;#     rdx -> base point address (in)
-;#     rcx -> lo byte clamping mask
-;#     r8  -> hi byte clamping mask
 
-sub rsp, 392
+sub rsp, 360
 
-;# stack layout (offsets from rsp):
-;# 0 T1
-;# 32 T2
-;# 64 T3
-;# 96 T4
-;# 128 X1
-;# 160 X2
-;# 192 X3
-;# 224 Z2
-;# 256 Z3
-;# 288 saved registers: rbx, rbp, rdi, rsi, r12, r13, r14, r15
-;# 352 key bit index (1 byte)
-;# 353 swap flag (1 byte)
-;# 354 current key byte value (1 byte)
-;# 356 key byte index (4 bytes)
-;# 360 private key
+;# |-----------------|------------------------|----------------------|
+;# |                        Stack layout                             |
+;# |-----------------|------------------------|----------------------|
+;# | offset from rsp |       ladder           |      inversion       |
+;# |-----------------|------------------------|----------------------|
+;# |     356         |   key byte index (4B)  |       unused         |
+;# |-----------------|------------------------|----------------------|
+;# |     354         |   key byte value (1B)  |                      |
+;# |-----------------|------------------------|                      |
+;# |     353         |   swap flag (1B)       | invtable pos. (4B)   |
+;# |-----------------|------------------------|                      |
+;# |     352         |   key bit index (1B)   |                      |
+;# |-----------------|------------------------|----------------------|
+;# |     288         | saved: rbx, rbp, rdi, rsi, r12, r13, r14, r15 |
+;# |-----------------|------------------------|----------------------|
+;# |     256         |          Z3            |                      |
+;# |-----------------|------------------------|                      |
+;# |     224         |          Z2            |                      |
+;# |-----------------|------------------------|       unused         |
+;# |     192         |          X3            |                      |
+;# |-----------------|------------------------|                      |
+;# |     160         |          X2            |                      |
+;# |-----------------|------------------------|----------------------|
+;# |     128         |          X1            |          T4          |
+;# |-----------------|------------------------|----------------------|
+;# |      96         |          T4            |          T3          |
+;# |-----------------|------------------------|----------------------|
+;# |      64         |          T3            |          T2          |
+;# |-----------------|------------------------|----------------------|
+;# |      32         |          T2            |          T1          |
+;# |-----------------|------------------------|----------------------|
+;# |       0         |          T1            |          T0          |
+;# |-----------------|------------------------|----------------------|
 
 mov    qword ptr [rsp+288], rbx
 mov    qword ptr [rsp+296], rbp
 mov    qword ptr [rsp+304], rdi
-;# mov    qword ptr [rsp+312], rsi
+mov    qword ptr [rsp+312], rsi
 mov    qword ptr [rsp+320], r12
 mov    qword ptr [rsp+328], r13
 mov    qword ptr [rsp+336], r14
 mov    qword ptr [rsp+344], r15
-
-;# copy the private key and clamp it
-shl    r8, 56
-or     rcx, -8
-mov    r9, qword ptr [rsi+24]
-or     r9, r8
-mov    qword ptr [rsp+384], r9
-mov    r8, qword ptr [rsi]
-and    r8, rcx
-mov    qword ptr [rsp+360], r8
-mov    r8, qword ptr [rsi+8]
-mov    qword ptr [rsp+368], r8
-mov    r8, qword ptr [rsi+16]
-mov    qword ptr [rsp+376], r8
 
 ;# starting from bit 6 of the 31st byte
 mov    eax, 31
 mov    byte ptr [rsp+352], 6
 mov    byte ptr [rsp+353], 0
 mov    dword ptr [rsp+356], eax
-lea    rsi, [rsp+360]
 
 ;# load XP
 mov    r8, qword ptr [rdx]
@@ -1614,18 +1614,18 @@ mov    byte ptr [rsp+352], cl
 jge    loop_bit
 
 mov    byte ptr [rsp+352], 7
-lea    rsi, [rsp+360]
+mov    rsi, qword ptr [rsp+312]
 mov    eax, dword ptr [rsp+356]
 sub    eax, 1
 mov    dword ptr [rsp+356], eax
 ;cmp    eax, 0
 jge    loop_byte
 
-;# remove the private key from the stack
-mov    qword ptr [rsi], 0
-mov    qword ptr [rsi+8], 0
-mov    qword ptr [rsi+16], 0
-mov    qword ptr [rsi+24], 0
+;# remove the private key byte from the stack
+mov    byte ptr [rsp+354], 0
+
+;# remove the private key address from the stack
+mov    qword ptr [rsp+312], 0
 
 ;# load select, AKA the LSB, then remove
 ;# needed to support privkeys wth unclamped LSB
@@ -2016,4 +2016,4 @@ mov    r13, qword ptr [rsp+328]
 mov    r14, qword ptr [rsp+336]
 mov    r15, qword ptr [rsp+344]
 
-add    rsp, 392
+add    rsp, 360
