@@ -23,8 +23,6 @@ mx25519_scalarmult_amd64x PROC
   mov   rdi, rcx
   mov   rsi, rdx
   mov   rdx, r8
-  mov   rcx, r9
-  movzx r8, byte ptr [rsp+40]
   sub   rsp, 160
   vmovdqu xmmword ptr [rsp+144], xmm6
   vmovdqu xmmword ptr [rsp+128], xmm7
@@ -61,8 +59,6 @@ mx25519_scalarmult_amd64 PROC
   mov   rdi, rcx
   mov   rsi, rdx
   mov   rdx, r8
-  mov   rcx, r9
-  movzx r8, byte ptr [rsp+40]
 
 include scalarmult_compat.inc
 

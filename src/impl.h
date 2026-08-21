@@ -13,9 +13,7 @@
 
 typedef void scmul_func(uint8_t result[32],
     const uint8_t key[32],
-    const uint8_t base[32],
-    uint8_t clamp_lo,
-    uint8_t clamp_hi);
+    const uint8_t base[32]);
 
 typedef struct mx25519_impl {
     scmul_func* scmul;

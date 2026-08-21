@@ -35,64 +35,6 @@
 	.text
 	.align	2
 
-	// in: x0: pointer
-	// out: x0: loaded value
-	//.type	load64unaligned, %function
-load64unaligned:
-	ldrb w1, [x0]
-	ldrb w2, [x0, #1]
-	ldrb w3, [x0, #2]
-	ldrb w4, [x0, #3]
-	ldrb w5, [x0, #4]
-	ldrb w6, [x0, #5]
-	ldrb w7, [x0, #6]
-	ldrb w8, [x0, #7]
-
-	orr	w1, w1, w2, lsl #8
-	orr	w3, w3, w4, lsl #8
-	orr	w5, w5, w6, lsl #8
-	orr	w7, w7, w8, lsl #8
-
-	orr	w1, w1, w3, lsl #16
-	orr	w5, w5, w7, lsl #16
-
-	orr	x0, x1, x5, lsl #32
-
-	ret
-	//.size	load64unaligned, .-load64unaligned
-
-	// in: x0: pointer
-	// out: x0-x3: loaded value
-	//.type	load256unaligned, %function
-load256unaligned:
-	stp	x29, x30, [sp, #-64]!
-	mov	x29, sp
-	stp	x19, x20, [sp, #16]
-	stp	x21, x22, [sp, #32]
-
-	mov	x19, x0
-	bl	load64unaligned
-	mov	x20, x0
-	add	x0, x19, #8
-	bl	load64unaligned
-	mov	x21, x0
-	add	x0, x19, #16
-	bl	load64unaligned
-	mov	x22, x0
-	add	x0, x19, #24
-	bl	load64unaligned
-	mov	x3, x0
-
-	mov	x0, x20
-	mov	x1, x21
-	mov	x2, x22
-
-	ldp	x19, x20, [sp, #16]
-	ldp	x21, x22, [sp, #32]
-	ldp	x29, x30, [sp], #64
-	ret
-	//.size load256unaligned, .-load256unaligned
-
 	// in: x1: scalar pointer, x2: base point pointer
 	// out: x0: result pointer
 	.global	DECL(mx25519_scalarmult_arm64)
@@ -109,28 +51,56 @@ DECL(mx25519_scalarmult_arm64):
 	stp	d10, d11, [sp, #112]
 	stp	d12, d13, [sp, #128]
 	stp	d14, d15, [sp, #144]
-	sub	sp, sp, 192
+	sub	sp, sp, 176
 
-	// 0: mask1, 8: mask2, 16: AA, 56: B/BB, 96: counter, 100: lastbit, 104: scalar, 136: X1, 176: outptr, 184: padding, 192: fp, 200: lr
+// |-----------------|------------------------|----------------------|
+// |                        Stack layout                             |
+// |-----------------|------------------------|----------------------|
+// | offset from sp  |       ladder           |      inversion       |
+// |-----------------|------------------------|----------------------|
+// |     272         |                saved: d8 - d15                |
+// |-----------------|------------------------|----------------------|
+// |     192         |               saved: x19 - x28                |
+// |-----------------|------------------------|----------------------|
+// |     176         |           saved: x29 (fp), x30 (lr)           |
+// |-----------------|------------------------|----------------------|
+// |     168         |                    outptr                     |
+// |-----------------|------------------------|----------------------|
+// |     160         |                        |   invtable pointer   |
+// |-----------------|         unused         |----------------------|
+// |     144         |                        |                      |
+// |-----------------|------------------------|          T3          |
+// |     120         |                        |                      |
+// |-----------------|          X1            |----------------------|
+// |     104         |                        |                      |
+// |-----------------|------------------------|                      |
+// |     100         |      lastbit (4B)      |                      |
+// |-----------------|------------------------|          T2          |
+// |      96         |      counter (4B)      |                      |
+// |-----------------|------------------------|                      |
+// |      80         |                        |                      |
+// |-----------------|          B/BB          |----------------------|
+// |      56         |                        |                      |
+// |-----------------|------------------------|          T1          |
+// |      40         |                        |                      |
+// |-----------------|          AA            |----------------------|
+// |      16         |                        |                      |
+// |-----------------|------------------------|                      |
+// |       8         |         mask2          |          T0          |
+// |-----------------|------------------------|                      |
+// |       0         |         mask1          |                      |
+// |-----------------|------------------------|----------------------|
 
-	orr	x9, x3, #0xfffffffffffffff8 // clamp_lo -> u64
-	lsl	x10, x4, #56                // clamp_hi -> u64
+	str	x0, [sp, #168] // outptr
 
-	str	x0, [sp, #176] // outptr
-	mov	x19, x2 // point
+	mov	w30, #19
+	dup	v31.2s, w30
+	// The upper 64 bits of v31 are unused, so we stash the private key pointer there.
+	mov	v31.d[1], x1
 
-	mov	x0, x1 // scalar
-	bl	load256unaligned
-
-	and	x0, x0, x9  // clamp lo byte
-	orr	x3, x3, x10 // clamp hi byte
-
-	// store clamped key
-	stp	x0, x1, [sp, #104]
-	stp	x2, x3, [sp, #104+16]
-
-	mov	x0, x19 // point
-	bl	load256unaligned
+	// Load the base point
+	ldp	x0, x1, [x2]
+	ldp	x2, x3, [x2, #16]
 
 	// Unpack point (discard most significant bit)
 	lsr	x12, x0, #51
@@ -147,11 +117,11 @@ DECL(mx25519_scalarmult_arm64):
 	and	w12, w12, #0x3ffffff
 	and	w15, w2, #0x1ffffff
 	and	w17, w17, #0x1ffffff
-	stp	w10, w11, [sp, #136]
-	stp	w12, w13, [sp, #136+8]
-	stp	w14, w15, [sp, #136+16]
-	stp	w16, w17, [sp, #136+24]
-	stp	w8, w9, [sp, #136+32]
+	stp	w10, w11, [sp, #104]
+	stp	w12, w13, [sp, #104+8]
+	stp	w14, w15, [sp, #104+16]
+	stp	w16, w17, [sp, #104+24]
+	stp	w8, w9, [sp, #104+32]
 
 	// X2 (initially set to 1)
 	mov	x1, #1
@@ -191,8 +161,6 @@ DECL(mx25519_scalarmult_arm64):
 	str	w0, [sp, #96]
 
 
-	mov	w30, #19
-	dup	v31.2s, w30
 	mov	x0, #(1<<26)-1
 	dup	v30.2d, x0
 	ldr	x0, =0x07fffffe07fffffc
@@ -203,7 +171,8 @@ DECL(mx25519_scalarmult_arm64):
 	ldr	d28, [sp, #8]
 	ldr	d29, [sp]
 
-	ldrb	w1, [sp, #135]
+	mov	x0, v31.d[1] // private key
+	ldrb	w1, [x0, #31]
 	lsr	w1, w1, #6
 	str	w1, [sp, #100]
 
@@ -829,7 +798,7 @@ DECL(mx25519_scalarmult_arm64):
 	and	v7.16b, v27.16b, v15.16b
 	umaddl	x8, w19, w21, x8
 	and	v2.16b, v22.16b, v30.16b
-	add	x26, sp, #136	// X1 for ASIMD part
+	add	x26, sp, #104	// X1 for ASIMD part
 	usra	v9.2d, v28.2d, #26
 	add	x27, sp, #16	// AA
 	and	v8.16b, v28.16b, v30.16b
@@ -1149,11 +1118,17 @@ DECL(mx25519_scalarmult_arm64):
 		trn1	v4.4s, v8.4s, v9.4s
 	lsr	x3, x2, #32
 	usra	v22.2d, v21.2d, #25
-	add	x4, sp, #104
+	mov	x4, v31.d[1] // private key
 	and	v21.16b, v21.16b, v15.16b
 	subs	w0, w2, #1
 		trn1	v19.4s, v28.4s, v29.4s
-	asr	w1, w0, #5
+	// The original code had a subtle bug here with: asr w1, w0, #5
+	// Since this comes after the subtraction, w0 is -1 on the last iteration.
+	// The following ldr then did an out-of-bounds read from the pointer x4.
+	// This was harmless for the stack copy of the private key, but could
+	// cause crashes in the new code that reads from the user-provided pointer.
+	// Fixed with ubfx, which clamps -1 to 7.
+	ubfx	w1, w0, #5, #3
 	usra	v23.2d, v22.2d, #26
 		add	x6, x6, x7, lsr #26
 	and	v22.16b, v22.16b, v30.16b
@@ -1202,6 +1177,9 @@ mov	v10.d[0], v0.d[1]
 	// Z5 -> Z3 in v11, v13, ..., v19
 
 	bpl	.Lmainloop
+
+	// Wipe the private key address
+	mov	v31.d[1], xzr
 
 	tst	w3, #1
 
@@ -1611,11 +1589,11 @@ mov	v10.d[0], v0.d[1]
 	adc	x13, x13, xzr
 	and	x13, x13, 0x7fffffffffffffff
 
-	ldr	x17, [sp, #176]
+	ldr	x17, [sp, #168] // outptr
 	stp	x10, x11, [x17] // todo: fix for unaligned store
 	stp	x12, x13, [x17, #16]
 
-	add sp, sp, 192
+	add sp, sp, 176
 
 	ldp	x19, x20, [sp, #16]
 	ldp	x21, x22, [sp, #32]
