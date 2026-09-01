@@ -44,6 +44,21 @@ const char test_sc4[] = "abc58a54782e87c7052458c2caa461aa27024fb08801ad4bb376b88
 const char test_pt4[] = "08558f428dff0dc8ee4bebf2408982cf65538a3ae57dffe4f49f43f5506ccd09";
 const char test_re4[] = "cd178e864e4f3dd3f5e945c04b87825b84d8a224b6c240784515c5f87af27647";
 
+/* scalar 1, non-canonical Z2 = 2^255+1 entering the inversion */
+static const char test_sc5[] = "0100000000000000000000000000000000000000000000000000000000000000";
+static const char test_pt5[] = "6c56d74c736542c73630387cad9331f4f7454273c977bc27b5df0e497463451a";
+static const char test_re5[] = "6c56d74c736542c73630387cad9331f4f7454273c977bc27b5df0e497463451a";
+
+/* scalar 1, non-canonical 2^255+1 arising inside the inversion */
+static const char test_sc6[] = "0100000000000000000000000000000000000000000000000000000000000000";
+static const char test_pt6[] = "356abee0fdea9fd3a30e3de8844bfb4bc5d9ea808e9cbe11d27269032cb3943a";
+static const char test_re6[] = "356abee0fdea9fd3a30e3de8844bfb4bc5d9ea808e9cbe11d27269032cb3943a";
+
+/* scalar 1, non-canonical 2^255+1 before the final reduction */
+static const char test_sc7[] = "0100000000000000000000000000000000000000000000000000000000000000";
+static const char test_pt7[] = "1400000000000000000000000000000000000000000000000000000000000000";
+static const char test_re7[] = "1400000000000000000000000000000000000000000000000000000000000000";
+
 /* DH key exchange tests */
 static const char rfc7748_alice_priv[] = "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a";
 static const char rfc7748_alice_pub[] = "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a";
@@ -176,6 +191,21 @@ static bool test_scmul4_portable() {
     return true;
 }
 
+static bool test_scmul5_portable() {
+    assert(check_scmul_unclamped(test_sc5, test_pt5, test_re5, &no_clamping));
+    return true;
+}
+
+static bool test_scmul6_portable() {
+    assert(check_scmul_unclamped(test_sc6, test_pt6, test_re6, &no_clamping));
+    return true;
+}
+
+static bool test_scmul7_portable() {
+    assert(check_scmul_unclamped(test_sc7, test_pt7, test_re7, &no_clamping));
+    return true;
+}
+
 static bool test_dh_portable() {
     check_dh();
     return true;
@@ -239,6 +269,30 @@ static bool test_scmul4_arm64() {
         return false;
     }
     assert(check_scmul_unclamped(test_sc4, test_pt4, test_re4, &torsion_clamping));
+    return true;
+}
+
+static bool test_scmul5_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc5, test_pt5, test_re5, &no_clamping));
+    return true;
+}
+
+static bool test_scmul6_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc6, test_pt6, test_re6, &no_clamping));
+    return true;
+}
+
+static bool test_scmul7_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc7, test_pt7, test_re7, &no_clamping));
     return true;
 }
 
@@ -311,6 +365,30 @@ static bool test_scmul4_amd64() {
     return true;
 }
 
+static bool test_scmul5_amd64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc5, test_pt5, test_re5, &no_clamping));
+    return true;
+}
+
+static bool test_scmul6_amd64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc6, test_pt6, test_re6, &no_clamping));
+    return true;
+}
+
+static bool test_scmul7_amd64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc7, test_pt7, test_re7, &no_clamping));
+    return true;
+}
+
 static bool test_dh_amd64() {
     if (impl == NULL) {
         return false;
@@ -380,6 +458,30 @@ static bool test_scmul4_amd64x() {
     return true;
 }
 
+static bool test_scmul5_amd64x() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc5, test_pt5, test_re5, &no_clamping));
+    return true;
+}
+
+static bool test_scmul6_amd64x() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc6, test_pt6, test_re6, &no_clamping));
+    return true;
+}
+
+static bool test_scmul7_amd64x() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc7, test_pt7, test_re7, &no_clamping));
+    return true;
+}
+
 static bool test_dh_amd64x() {
     if (impl == NULL) {
         return false;
@@ -411,6 +513,9 @@ int main() {
     RUN_TEST(test_scmul2_portable);
     RUN_TEST(test_scmul3_portable);
     RUN_TEST(test_scmul4_portable);
+    RUN_TEST(test_scmul5_portable);
+    RUN_TEST(test_scmul6_portable);
+    RUN_TEST(test_scmul7_portable);
     RUN_TEST(test_dh_portable);
     RUN_TEST(test_mul_base_times1_portable);
     RUN_TEST(test_select_arm64);
@@ -419,6 +524,9 @@ int main() {
     RUN_TEST(test_scmul2_arm64);
     RUN_TEST(test_scmul3_arm64);
     RUN_TEST(test_scmul4_arm64);
+    RUN_TEST(test_scmul5_arm64);
+    RUN_TEST(test_scmul6_arm64);
+    RUN_TEST(test_scmul7_arm64);
     RUN_TEST(test_dh_arm64);
     RUN_TEST(test_mul_base_times1_arm64);
     RUN_TEST(test_select_amd64);
@@ -427,6 +535,9 @@ int main() {
     RUN_TEST(test_scmul2_amd64);
     RUN_TEST(test_scmul3_amd64);
     RUN_TEST(test_scmul4_amd64);
+    RUN_TEST(test_scmul5_amd64);
+    RUN_TEST(test_scmul6_amd64);
+    RUN_TEST(test_scmul7_amd64);
     RUN_TEST(test_dh_amd64);
     RUN_TEST(test_mul_base_times1_amd64);
     RUN_TEST(test_select_amd64x);
@@ -435,6 +546,9 @@ int main() {
     RUN_TEST(test_scmul2_amd64x);
     RUN_TEST(test_scmul3_amd64x);
     RUN_TEST(test_scmul4_amd64x);
+    RUN_TEST(test_scmul5_amd64x);
+    RUN_TEST(test_scmul6_amd64x);
+    RUN_TEST(test_scmul7_amd64x);
     RUN_TEST(test_dh_amd64x);
     RUN_TEST(test_mul_base_times1_amd64x);
 

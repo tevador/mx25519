@@ -1661,6 +1661,13 @@ cmove  r9, r13
 cmove  r10, r14
 cmove  r11, r15
 
+;# reduce Z2 below 2^255
+xor    ebx, ebx
+shld   rbx, r11, 1
+btr    r11, 63
+imul   rbx, rbx, 19
+add    r8, rbx
+
 ;# result ← X2 · Z2^(-1)
 
 ;# result in: r8, r9, r10, r11
@@ -1694,6 +1701,7 @@ test   cl, cl
 jz     skip_square
 
 square_loop:
+;# input (< 2^255) in: r8, r9, r10, r11
 mov    rax, r11
 mul    r11
 mov    r12, rax
@@ -1952,6 +1960,13 @@ add    r8, r15
 adc    r9, 0
 adc    r10, 0
 adc    r11, 0
+
+;# reduce result below 2^255
+xor    eax, eax
+shld   rax, r11, 1
+btr    r11, 63
+imul   rax, rax, 19
+add    r8, rax
 
 skip_mul:
 shr    ecx, 11
