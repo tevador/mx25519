@@ -7,6 +7,8 @@ This library provides four constant-time implementations of scalar multiplicatio
 
 A specific implementation can be selected at runtime using the [API](include/mx25519.h). Passing the `MX25519_TYPE_AUTO` flag automatically selects the fastest implementation supported by the current machine.
 
+**Important note**: This library does not perform internal clamping of the private key as specified in [RFC 7748](https://www.rfc-editor.org/info/rfc7748). This is a deliberate design choice to allow use-cases that require unclamped private keys (for example [Carrot](https://github.com/jeffro256/carrot/blob/master/carrot.md)). It is the caller's responsibility to clamp the private key as needed before calling `mx25519_scmul_base_unclamped` or `mx25519_scmul_key_unclamped`.
+
 ## Build
 
 ```

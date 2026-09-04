@@ -10,9 +10,7 @@
 #include <stdint.h>
 
 void mx25519_scalarmult_arm64(uint8_t* q,
-    const uint8_t* n,
-    const uint8_t* p,
-    const uint8_t clamp_lo,
-    const uint8_t clamp_hi);
+    const uint8_t* e,
+    const uint8_t* p);
 
 #endif
