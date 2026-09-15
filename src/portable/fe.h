@@ -80,17 +80,17 @@ static void fe_frombytes(fe h,const uint8_t *s)
   int64_t carry8;
   int64_t carry9;
 
-  carry9 = (h9 + (int64_t) (1<<24)) >> 25; h0 += carry9 * 19; h9 -= carry9 << 25;
-  carry1 = (h1 + (int64_t) (1<<24)) >> 25; h2 += carry1; h1 -= carry1 << 25;
-  carry3 = (h3 + (int64_t) (1<<24)) >> 25; h4 += carry3; h3 -= carry3 << 25;
-  carry5 = (h5 + (int64_t) (1<<24)) >> 25; h6 += carry5; h5 -= carry5 << 25;
-  carry7 = (h7 + (int64_t) (1<<24)) >> 25; h8 += carry7; h7 -= carry7 << 25;
+  carry9 = (h9 + (int64_t) (1<<24)) >> 25; h0 += carry9 * 19; h9 -= carry9 * ((int64_t)1 << 25);
+  carry1 = (h1 + (int64_t) (1<<24)) >> 25; h2 += carry1; h1 -= carry1 * ((int64_t)1 << 25);
+  carry3 = (h3 + (int64_t) (1<<24)) >> 25; h4 += carry3; h3 -= carry3 * ((int64_t)1 << 25);
+  carry5 = (h5 + (int64_t) (1<<24)) >> 25; h6 += carry5; h5 -= carry5 * ((int64_t)1 << 25);
+  carry7 = (h7 + (int64_t) (1<<24)) >> 25; h8 += carry7; h7 -= carry7 * ((int64_t)1 << 25);
 
-  carry0 = (h0 + (int64_t) (1<<25)) >> 26; h1 += carry0; h0 -= carry0 << 26;
-  carry2 = (h2 + (int64_t) (1<<25)) >> 26; h3 += carry2; h2 -= carry2 << 26;
-  carry4 = (h4 + (int64_t) (1<<25)) >> 26; h5 += carry4; h4 -= carry4 << 26;
-  carry6 = (h6 + (int64_t) (1<<25)) >> 26; h7 += carry6; h6 -= carry6 << 26;
-  carry8 = (h8 + (int64_t) (1<<25)) >> 26; h9 += carry8; h8 -= carry8 << 26;
+  carry0 = (h0 + (int64_t) (1<<25)) >> 26; h1 += carry0; h0 -= carry0 * ((int64_t)1 << 26);
+  carry2 = (h2 + (int64_t) (1<<25)) >> 26; h3 += carry2; h2 -= carry2 * ((int64_t)1 << 26);
+  carry4 = (h4 + (int64_t) (1<<25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
+  carry6 = (h6 + (int64_t) (1<<25)) >> 26; h7 += carry6; h6 -= carry6 * ((int64_t)1 << 26);
+  carry8 = (h8 + (int64_t) (1<<25)) >> 26; h9 += carry8; h8 -= carry8 * ((int64_t)1 << 26);
 
   h[0] = h0;
   h[1] = h1;
@@ -169,16 +169,16 @@ static void fe_tobytes(unsigned char *s,fe h)
   h0 += 19 * q;
   /* Goal: Output h-2^255 q, which is between 0 and 2^255-20. */
 
-  carry0 = h0 >> 26; h1 += carry0; h0 -= carry0 << 26;
-  carry1 = h1 >> 25; h2 += carry1; h1 -= carry1 << 25;
-  carry2 = h2 >> 26; h3 += carry2; h2 -= carry2 << 26;
-  carry3 = h3 >> 25; h4 += carry3; h3 -= carry3 << 25;
-  carry4 = h4 >> 26; h5 += carry4; h4 -= carry4 << 26;
-  carry5 = h5 >> 25; h6 += carry5; h5 -= carry5 << 25;
-  carry6 = h6 >> 26; h7 += carry6; h6 -= carry6 << 26;
-  carry7 = h7 >> 25; h8 += carry7; h7 -= carry7 << 25;
-  carry8 = h8 >> 26; h9 += carry8; h8 -= carry8 << 26;
-  carry9 = h9 >> 25;               h9 -= carry9 << 25;
+  carry0 = h0 >> 26; h1 += carry0; h0 -= carry0 * (1 << 26);
+  carry1 = h1 >> 25; h2 += carry1; h1 -= carry1 * (1 << 25);
+  carry2 = h2 >> 26; h3 += carry2; h2 -= carry2 * (1 << 26);
+  carry3 = h3 >> 25; h4 += carry3; h3 -= carry3 * (1 << 25);
+  carry4 = h4 >> 26; h5 += carry4; h4 -= carry4 * (1 << 26);
+  carry5 = h5 >> 25; h6 += carry5; h5 -= carry5 * (1 << 25);
+  carry6 = h6 >> 26; h7 += carry6; h6 -= carry6 * (1 << 26);
+  carry7 = h7 >> 25; h8 += carry7; h7 -= carry7 * (1 << 25);
+  carry8 = h8 >> 26; h9 += carry8; h8 -= carry8 * (1 << 26);
+  carry9 = h9 >> 25;               h9 -= carry9 * (1 << 25);
                   /* h10 = carry9 */
 
   /*
@@ -191,32 +191,32 @@ static void fe_tobytes(unsigned char *s,fe h)
   s[0] = h0 >> 0;
   s[1] = h0 >> 8;
   s[2] = h0 >> 16;
-  s[3] = (h0 >> 24) | (h1 << 2);
+  s[3] = (h0 >> 24) | ((uint32_t)h1 << 2);
   s[4] = h1 >> 6;
   s[5] = h1 >> 14;
-  s[6] = (h1 >> 22) | (h2 << 3);
+  s[6] = (h1 >> 22) | ((uint32_t)h2 << 3);
   s[7] = h2 >> 5;
   s[8] = h2 >> 13;
-  s[9] = (h2 >> 21) | (h3 << 5);
+  s[9] = (h2 >> 21) | ((uint32_t)h3 << 5);
   s[10] = h3 >> 3;
   s[11] = h3 >> 11;
-  s[12] = (h3 >> 19) | (h4 << 6);
+  s[12] = (h3 >> 19) | ((uint32_t)h4 << 6);
   s[13] = h4 >> 2;
   s[14] = h4 >> 10;
   s[15] = h4 >> 18;
   s[16] = h5 >> 0;
   s[17] = h5 >> 8;
   s[18] = h5 >> 16;
-  s[19] = (h5 >> 24) | (h6 << 1);
+  s[19] = (h5 >> 24) | ((uint32_t)h6 << 1);
   s[20] = h6 >> 7;
   s[21] = h6 >> 15;
-  s[22] = (h6 >> 23) | (h7 << 3);
+  s[22] = (h6 >> 23) | ((uint32_t)h7 << 3);
   s[23] = h7 >> 5;
   s[24] = h7 >> 13;
-  s[25] = (h7 >> 21) | (h8 << 4);
+  s[25] = (h7 >> 21) | ((uint32_t)h8 << 4);
   s[26] = h8 >> 4;
   s[27] = h8 >> 12;
-  s[28] = (h8 >> 20) | (h9 << 6);
+  s[28] = (h8 >> 20) | ((uint32_t)h9 << 6);
   s[29] = h9 >> 2;
   s[30] = h9 >> 10;
   s[31] = h9 >> 18;
@@ -654,46 +654,46 @@ static void fe_mul(fe h, fe f, fe g)
       i.e. |h1| <= 1.5*2^58; narrower ranges for h3, h5, h7, h9
     */
 
-    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 << 26;
-    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 << 26;
+    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 * ((int64_t)1 << 26);
+    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
     /* |h0| <= 2^25 */
     /* |h4| <= 2^25 */
     /* |h1| <= 1.51*2^58 */
     /* |h5| <= 1.51*2^58 */
 
-    carry1 = (h1 + (int64_t)(1 << 24)) >> 25; h2 += carry1; h1 -= carry1 << 25;
-    carry5 = (h5 + (int64_t)(1 << 24)) >> 25; h6 += carry5; h5 -= carry5 << 25;
+    carry1 = (h1 + (int64_t)(1 << 24)) >> 25; h2 += carry1; h1 -= carry1 * ((int64_t)1 << 25);
+    carry5 = (h5 + (int64_t)(1 << 24)) >> 25; h6 += carry5; h5 -= carry5 * ((int64_t)1 << 25);
     /* |h1| <= 2^24; from now on fits into int32 */
     /* |h5| <= 2^24; from now on fits into int32 */
     /* |h2| <= 1.21*2^59 */
     /* |h6| <= 1.21*2^59 */
 
-    carry2 = (h2 + (int64_t)(1 << 25)) >> 26; h3 += carry2; h2 -= carry2 << 26;
-    carry6 = (h6 + (int64_t)(1 << 25)) >> 26; h7 += carry6; h6 -= carry6 << 26;
+    carry2 = (h2 + (int64_t)(1 << 25)) >> 26; h3 += carry2; h2 -= carry2 * ((int64_t)1 << 26);
+    carry6 = (h6 + (int64_t)(1 << 25)) >> 26; h7 += carry6; h6 -= carry6 * ((int64_t)1 << 26);
     /* |h2| <= 2^25; from now on fits into int32 unchanged */
     /* |h6| <= 2^25; from now on fits into int32 unchanged */
     /* |h3| <= 1.51*2^58 */
     /* |h7| <= 1.51*2^58 */
 
-    carry3 = (h3 + (int64_t)(1 << 24)) >> 25; h4 += carry3; h3 -= carry3 << 25;
-    carry7 = (h7 + (int64_t)(1 << 24)) >> 25; h8 += carry7; h7 -= carry7 << 25;
+    carry3 = (h3 + (int64_t)(1 << 24)) >> 25; h4 += carry3; h3 -= carry3 * ((int64_t)1 << 25);
+    carry7 = (h7 + (int64_t)(1 << 24)) >> 25; h8 += carry7; h7 -= carry7 * ((int64_t)1 << 25);
     /* |h3| <= 2^24; from now on fits into int32 unchanged */
     /* |h7| <= 2^24; from now on fits into int32 unchanged */
     /* |h4| <= 1.52*2^33 */
     /* |h8| <= 1.52*2^33 */
 
-    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 << 26;
-    carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 << 26;
+    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
+    carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 * ((int64_t)1 << 26);
     /* |h4| <= 2^25; from now on fits into int32 unchanged */
     /* |h8| <= 2^25; from now on fits into int32 unchanged */
     /* |h5| <= 1.01*2^24 */
     /* |h9| <= 1.51*2^58 */
 
-    carry9 = (h9 + (int64_t)(1 << 24)) >> 25; h0 += carry9 * 19; h9 -= carry9 << 25;
+    carry9 = (h9 + (int64_t)(1 << 24)) >> 25; h0 += carry9 * 19; h9 -= carry9 * ((int64_t)1 << 25);
     /* |h9| <= 2^24; from now on fits into int32 unchanged */
     /* |h0| <= 1.8*2^37 */
 
-    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 << 26;
+    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 * ((int64_t)1 << 26);
     /* |h0| <= 2^25; from now on fits into int32 unchanged */
     /* |h1| <= 1.01*2^24 */
 
@@ -825,24 +825,24 @@ static void fe_sq(fe h, fe f)
     int64_t carry8;
     int64_t carry9;
 
-    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 << 26;
-    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 << 26;
+    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 * ((int64_t)1 << 26);
+    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
 
-    carry1 = (h1 + (int64_t)(1 << 24)) >> 25; h2 += carry1; h1 -= carry1 << 25;
-    carry5 = (h5 + (int64_t)(1 << 24)) >> 25; h6 += carry5; h5 -= carry5 << 25;
+    carry1 = (h1 + (int64_t)(1 << 24)) >> 25; h2 += carry1; h1 -= carry1 * ((int64_t)1 << 25);
+    carry5 = (h5 + (int64_t)(1 << 24)) >> 25; h6 += carry5; h5 -= carry5 * ((int64_t)1 << 25);
 
-    carry2 = (h2 + (int64_t)(1 << 25)) >> 26; h3 += carry2; h2 -= carry2 << 26;
-    carry6 = (h6 + (int64_t)(1 << 25)) >> 26; h7 += carry6; h6 -= carry6 << 26;
+    carry2 = (h2 + (int64_t)(1 << 25)) >> 26; h3 += carry2; h2 -= carry2 * ((int64_t)1 << 26);
+    carry6 = (h6 + (int64_t)(1 << 25)) >> 26; h7 += carry6; h6 -= carry6 * ((int64_t)1 << 26);
 
-    carry3 = (h3 + (int64_t)(1 << 24)) >> 25; h4 += carry3; h3 -= carry3 << 25;
-    carry7 = (h7 + (int64_t)(1 << 24)) >> 25; h8 += carry7; h7 -= carry7 << 25;
+    carry3 = (h3 + (int64_t)(1 << 24)) >> 25; h4 += carry3; h3 -= carry3 * ((int64_t)1 << 25);
+    carry7 = (h7 + (int64_t)(1 << 24)) >> 25; h8 += carry7; h7 -= carry7 * ((int64_t)1 << 25);
 
-    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 << 26;
-    carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 << 26;
+    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
+    carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 * ((int64_t)1 << 26);
 
-    carry9 = (h9 + (int64_t)(1 << 24)) >> 25; h0 += carry9 * 19; h9 -= carry9 << 25;
+    carry9 = (h9 + (int64_t)(1 << 24)) >> 25; h0 += carry9 * 19; h9 -= carry9 * ((int64_t)1 << 25);
 
-    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 << 26;
+    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 * ((int64_t)1 << 26);
 
     h[0] = h0;
     h[1] = h1;
@@ -900,17 +900,17 @@ static void fe_mul121666(fe h, fe f)
     int64_t carry8;
     int64_t carry9;
 
-    carry9 = (h9 + (int64_t)(1 << 24)) >> 25; h0 += carry9 * 19; h9 -= carry9 << 25;
-    carry1 = (h1 + (int64_t)(1 << 24)) >> 25; h2 += carry1; h1 -= carry1 << 25;
-    carry3 = (h3 + (int64_t)(1 << 24)) >> 25; h4 += carry3; h3 -= carry3 << 25;
-    carry5 = (h5 + (int64_t)(1 << 24)) >> 25; h6 += carry5; h5 -= carry5 << 25;
-    carry7 = (h7 + (int64_t)(1 << 24)) >> 25; h8 += carry7; h7 -= carry7 << 25;
+    carry9 = (h9 + (int64_t)(1 << 24)) >> 25; h0 += carry9 * 19; h9 -= carry9 * ((int64_t)1 << 25);
+    carry1 = (h1 + (int64_t)(1 << 24)) >> 25; h2 += carry1; h1 -= carry1 * ((int64_t)1 << 25);
+    carry3 = (h3 + (int64_t)(1 << 24)) >> 25; h4 += carry3; h3 -= carry3 * ((int64_t)1 << 25);
+    carry5 = (h5 + (int64_t)(1 << 24)) >> 25; h6 += carry5; h5 -= carry5 * ((int64_t)1 << 25);
+    carry7 = (h7 + (int64_t)(1 << 24)) >> 25; h8 += carry7; h7 -= carry7 * ((int64_t)1 << 25);
 
-    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 << 26;
-    carry2 = (h2 + (int64_t)(1 << 25)) >> 26; h3 += carry2; h2 -= carry2 << 26;
-    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 << 26;
-    carry6 = (h6 + (int64_t)(1 << 25)) >> 26; h7 += carry6; h6 -= carry6 << 26;
-    carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 << 26;
+    carry0 = (h0 + (int64_t)(1 << 25)) >> 26; h1 += carry0; h0 -= carry0 * ((int64_t)1 << 26);
+    carry2 = (h2 + (int64_t)(1 << 25)) >> 26; h3 += carry2; h2 -= carry2 * ((int64_t)1 << 26);
+    carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
+    carry6 = (h6 + (int64_t)(1 << 25)) >> 26; h7 += carry6; h6 -= carry6 * ((int64_t)1 << 26);
+    carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 * ((int64_t)1 << 26);
 
     h[0] = h0;
     h[1] = h1;

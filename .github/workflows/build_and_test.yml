@@ -40,6 +40,13 @@ jobs:
           cmake --build build
           ./build/mx25519-tests
 
+      - name: Build & test (native, sanitizers)
+        if: matrix.arch == 'amd64'
+        run: |
+          cmake -S . -B build-san -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all"
+          cmake --build build-san
+          ./build-san/mx25519-tests
+
       # Emulated builds
       - name: Set up QEMU
         if: matrix.arch != 'amd64'
