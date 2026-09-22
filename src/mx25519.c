@@ -39,7 +39,8 @@ static bool impl_supported(mx25519_type impl) {
     if (impl == MX25519_TYPE_AMD64X) {
 #if defined(PLATFORM_AMD64)
         x25519_cpu_cap cap = mx25519_get_cpu_cap();
-        return (cap & X25519_CPU_CAP_MULX) != 0
+        return (cap & X25519_CPU_CAP_BMI1) != 0
+            && (cap & X25519_CPU_CAP_MULX) != 0
             && (cap & X25519_CPU_CAP_ADX)  != 0
             && (cap & X25519_CPU_CAP_AVX2) != 0;
 #else
