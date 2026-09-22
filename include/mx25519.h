@@ -61,7 +61,7 @@ typedef enum mx25519_type {
     #endif
     #define MX25519_PRIVATE
 #else
-    #ifdef MX25519_SHARED
+    #ifndef MX25519_STATIC
         #define MX25519_API __attribute__ ((visibility ("default")))
     #else
         #define MX25519_API __attribute__ ((visibility ("hidden")))
