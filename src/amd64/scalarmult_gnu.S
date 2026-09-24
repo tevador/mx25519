@@ -20,6 +20,20 @@
 #define db .byte
 #define ALIGN .balign
 
+#if defined(__CET__) && (__CET__ & 1)
+#define CET_ENDBR endbr64
+#else
+#define CET_ENDBR
+#endif
+
+#if defined(__ELF__)
+#define FUNC_TYPE(x) .type DECL(x), @function
+#define FUNC_SIZE(x) .size DECL(x), . - DECL(x)
+#else
+#define FUNC_TYPE(x)
+#define FUNC_SIZE(x)
+#endif
+
 .global DECL(mx25519_scalarmult_amd64x)
 .global DECL(mx25519_scalarmult_amd64)
 
@@ -29,7 +43,9 @@ ALIGN 32
 #include "gcd_table.inc"
 
 ALIGN 32
+FUNC_TYPE(mx25519_scalarmult_amd64x)
 DECL(mx25519_scalarmult_amd64x):
+  CET_ENDBR
 #ifdef WINABI
   mov   qword ptr [rsp+8], rdi
   mov   qword ptr [rsp+16], rsi
@@ -68,9 +84,12 @@ DECL(mx25519_scalarmult_amd64x):
 #endif
 
   ret
+FUNC_SIZE(mx25519_scalarmult_amd64x)
 
 ALIGN 32
+FUNC_TYPE(mx25519_scalarmult_amd64)
 DECL(mx25519_scalarmult_amd64):
+  CET_ENDBR
 #ifdef WINABI
   mov   qword ptr [rsp+8], rdi
   mov   qword ptr [rsp+16], rsi
@@ -87,3 +106,22 @@ DECL(mx25519_scalarmult_amd64):
 #endif
 
   ret
+FUNC_SIZE(mx25519_scalarmult_amd64)
+
+#if defined(__ELF__)
+.section .note.GNU-stack,"",%progbits
+#if defined(__CET__)
+.section .note.gnu.property,"a"
+ALIGN 8
+.long 1f - 0f
+.long 4f - 1f
+.long 5
+0: .asciz "GNU"
+1: ALIGN 8
+.long 0xc0000002
+.long 3f - 2f
+2: .long __CET__
+3: ALIGN 8
+4:
+#endif
+#endif
