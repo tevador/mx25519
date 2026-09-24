@@ -59,7 +59,7 @@ set(MX25519_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE STRING "mx25519 
 add_library(mx25519 SHARED ${mx25519_sources})
 set_property(TARGET mx25519 PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET mx25519 PROPERTY PUBLIC_HEADER include/mx25519.h)
-include_directories(mx25519
+target_include_directories(mx25519
   PUBLIC include/)
 target_compile_definitions(mx25519 PRIVATE MX25519_SHARED)
 set_target_properties(mx25519 PROPERTIES SOVERSION ${MX25519_VERSION})
@@ -67,16 +67,13 @@ set_target_properties(mx25519 PROPERTIES SOVERSION ${MX25519_VERSION})
 add_library(mx25519_static STATIC ${mx25519_sources})
 set_property(TARGET mx25519_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET mx25519_static PROPERTY PUBLIC_HEADER include/mx25519.h)
-include_directories(mx25519_static
+target_include_directories(mx25519_static
   PUBLIC include/)
 set_target_properties(mx25519_static PROPERTIES OUTPUT_NAME mx25519)
 target_compile_definitions(mx25519_static PUBLIC MX25519_STATIC)
 
 add_executable(mx25519-tests
   tests/tests.c)
-include_directories(mx25519-tests
-  include/
-  src/)
 target_compile_definitions(mx25519-tests PRIVATE MX25519_STATIC)
 target_link_libraries(mx25519-tests
   PRIVATE mx25519_static)
@@ -86,9 +83,7 @@ add_executable(mx25519-bench
   tests/bench.c
   src/cpu.c
   src/platform.c)
-include_directories(mx25519-bench
-  include/
-  src/)
+target_include_directories(mx25519-bench PRIVATE src)
 target_compile_definitions(mx25519-bench PRIVATE MX25519_STATIC)
 target_link_libraries(mx25519-bench
   PRIVATE mx25519_static)
