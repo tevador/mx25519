@@ -11,6 +11,15 @@
 #pragma warning(disable: 4146) /* unary minus applied to unsigned type */
 #endif
 
+/* no inline */
+#if defined(_MSC_VER)
+#define NOINLINE __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+#define NOINLINE __attribute__((noinline))
+#else
+#define NOINLINE
+#endif
+
 #include <stdint.h>
 
 typedef int32_t fe[10];
@@ -490,7 +499,8 @@ Can get away with 11 carries, but then data flow is much deeper.
 With tighter constraints on inputs can squeeze carries into int32.
 */
 
-static void fe_mul(fe h, fe f, fe g)
+/* must not be inlined, otherwise clang may break constant timing */
+static NOINLINE void fe_mul(fe h, fe f, fe g)
 {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
@@ -512,20 +522,26 @@ static void fe_mul(fe h, fe f, fe g)
     int32_t g7 = g[7];
     int32_t g8 = g[8];
     int32_t g9 = g[9];
-    int32_t g1_19 = 19 * g1; /* 1.4*2^29 */
-    int32_t g2_19 = 19 * g2; /* 1.4*2^30; still ok */
-    int32_t g3_19 = 19 * g3;
-    int32_t g4_19 = 19 * g4;
-    int32_t g5_19 = 19 * g5;
-    int32_t g6_19 = 19 * g6;
-    int32_t g7_19 = 19 * g7;
-    int32_t g8_19 = 19 * g8;
-    int32_t g9_19 = 19 * g9;
-    int32_t f1_2 = 2 * f1;
-    int32_t f3_2 = 2 * f3;
-    int32_t f5_2 = 2 * f5;
-    int32_t f7_2 = 2 * f7;
-    int32_t f9_2 = 2 * f9;
+    /* Note: the 32-bit multiplies here are done with unsigned multiplication.
+    The reason is that signed overflow is UB, so signed multiplication lets
+    LLVM rewrite e.g. (int64_t)(19*g9) into 19*(int64_t)g9, which will cause
+    the limb products to use the 64-bit mul instruction on aarch64.
+    The 64-bit mul instruction is not constant-time on some ARM Cortex CPUs,
+    so this "optimization" causes the code to become variable-time. */
+    int32_t g1_19 = 19u * (uint32_t)g1; /* 1.4*2^29 */
+    int32_t g2_19 = 19u * (uint32_t)g2; /* 1.4*2^30; still ok */
+    int32_t g3_19 = 19u * (uint32_t)g3;
+    int32_t g4_19 = 19u * (uint32_t)g4;
+    int32_t g5_19 = 19u * (uint32_t)g5;
+    int32_t g6_19 = 19u * (uint32_t)g6;
+    int32_t g7_19 = 19u * (uint32_t)g7;
+    int32_t g8_19 = 19u * (uint32_t)g8;
+    int32_t g9_19 = 19u * (uint32_t)g9;
+    int32_t f1_2 = 2u * (uint32_t)f1;
+    int32_t f3_2 = 2u * (uint32_t)f3;
+    int32_t f5_2 = 2u * (uint32_t)f5;
+    int32_t f7_2 = 2u * (uint32_t)f7;
+    int32_t f9_2 = 2u * (uint32_t)f9;
     int64_t f0g0 = f0 * (int64_t)g0;
     int64_t f0g1 = f0 * (int64_t)g1;
     int64_t f0g2 = f0 * (int64_t)g2;
@@ -724,7 +740,8 @@ Postconditions:
 See fe_mul for discussion of implementation strategy.
 */
 
-static void fe_sq(fe h, fe f)
+/* must not be inlined, otherwise clang may break constant timing */
+static NOINLINE void fe_sq(fe h, fe f)
 {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
@@ -736,19 +753,19 @@ static void fe_sq(fe h, fe f)
     int32_t f7 = f[7];
     int32_t f8 = f[8];
     int32_t f9 = f[9];
-    int32_t f0_2 = 2 * f0;
-    int32_t f1_2 = 2 * f1;
-    int32_t f2_2 = 2 * f2;
-    int32_t f3_2 = 2 * f3;
-    int32_t f4_2 = 2 * f4;
-    int32_t f5_2 = 2 * f5;
-    int32_t f6_2 = 2 * f6;
-    int32_t f7_2 = 2 * f7;
-    int32_t f5_38 = 38 * f5; /* 1.31*2^30 */
-    int32_t f6_19 = 19 * f6; /* 1.31*2^30 */
-    int32_t f7_38 = 38 * f7; /* 1.31*2^30 */
-    int32_t f8_19 = 19 * f8; /* 1.31*2^30 */
-    int32_t f9_38 = 38 * f9; /* 1.31*2^30 */
+    int32_t f0_2 = 2u * (uint32_t)f0;
+    int32_t f1_2 = 2u * (uint32_t)f1;
+    int32_t f2_2 = 2u * (uint32_t)f2;
+    int32_t f3_2 = 2u * (uint32_t)f3;
+    int32_t f4_2 = 2u * (uint32_t)f4;
+    int32_t f5_2 = 2u * (uint32_t)f5;
+    int32_t f6_2 = 2u * (uint32_t)f6;
+    int32_t f7_2 = 2u * (uint32_t)f7;
+    int32_t f5_38 = 38u * (uint32_t)f5; /* 1.31*2^30 */
+    int32_t f6_19 = 19u * (uint32_t)f6; /* 1.31*2^30 */
+    int32_t f7_38 = 38u * (uint32_t)f7; /* 1.31*2^30 */
+    int32_t f8_19 = 19u * (uint32_t)f8; /* 1.31*2^30 */
+    int32_t f9_38 = 38u * (uint32_t)f9; /* 1.31*2^30 */
     int64_t f0f0 = f0 * (int64_t)f0;
     int64_t f0f1_2 = f0_2 * (int64_t)f1;
     int64_t f0f2_2 = f0_2 * (int64_t)f2;
