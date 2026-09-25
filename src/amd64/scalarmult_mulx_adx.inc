@@ -2265,6 +2265,8 @@ sbb rdi, 0
 sbb rbx, 0
 sbb rbp, 0
 
+vzeroupper
+
 ;# inverse in: rbp rbx rdi rsi
 ;# result ← X2 · Z2^(-1)
 
