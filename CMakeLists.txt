@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 set(MX25519_VERSION 1)
 
-project(mx25519)
+project(mx25519 C)
 
 set(mx25519_sources
 src/portable/scalarmult.c
