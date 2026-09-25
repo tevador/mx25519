@@ -12,7 +12,7 @@
 #define DECL(x) x
 #endif
 
-#if defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(_WIN32) || defined(__CYGWIN__)
 #define WINABI
 #endif
 
