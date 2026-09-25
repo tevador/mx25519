@@ -1661,8 +1661,26 @@ cmove  r9, r13
 cmove  r10, r14
 cmove  r11, r15
 
-;# reduce Z2 below 2^255
+;# wipe X2, X3, Z2, Z3 from the stack
 xor    ebx, ebx
+mov    qword ptr [rsp+160], rbx
+mov    qword ptr [rsp+168], rbx
+mov    qword ptr [rsp+176], rbx
+mov    qword ptr [rsp+184], rbx
+mov    qword ptr [rsp+192], rbx
+mov    qword ptr [rsp+200], rbx
+mov    qword ptr [rsp+208], rbx
+mov    qword ptr [rsp+216], rbx
+mov    qword ptr [rsp+224], rbx
+mov    qword ptr [rsp+232], rbx
+mov    qword ptr [rsp+240], rbx
+mov    qword ptr [rsp+248], rbx
+mov    qword ptr [rsp+256], rbx
+mov    qword ptr [rsp+264], rbx
+mov    qword ptr [rsp+272], rbx
+mov    qword ptr [rsp+280], rbx
+
+;# reduce Z2 below 2^255
 shld   rbx, r11, 1
 btr    r11, 63
 imul   rbx, rbx, 19
