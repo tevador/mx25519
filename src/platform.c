@@ -20,8 +20,7 @@
 
 uint64_t mx25519_cpu_cycles() {
 #if defined(PLATFORM_X86) || defined(PLATFORM_AMD64)
-    x25519_cpu_cap cpu_cap = mx25519_get_cpu_cap();
-    if (cpu_cap & X25519_CPU_CAP_RDTSCP) {
+    if (mx25519_cpu_has_rdtscp()) {
 #if defined(_MSC_VER)
         uint32_t aux;
         return __rdtscp(&aux);
