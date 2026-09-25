@@ -45,7 +45,10 @@
 	// out: x0: result pointer
 	.global	DECL(mx25519_scalarmult_arm64)
 #if defined(__ELF__)
+	.hidden	DECL(mx25519_scalarmult_arm64)
 	.type	DECL(mx25519_scalarmult_arm64), %function
+#elif defined(__APPLE__)
+	.private_extern	DECL(mx25519_scalarmult_arm64)
 #endif
 DECL(mx25519_scalarmult_arm64):
 	BTI_C

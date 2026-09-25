@@ -7,13 +7,15 @@
 #ifndef AMD64_SCALARMULT_H
 #define AMD64_SCALARMULT_H
 
+#include <mx25519.h>
+
 #include <stdint.h>
 
-void mx25519_scalarmult_amd64(uint8_t* q,
+MX25519_PRIVATE void mx25519_scalarmult_amd64(uint8_t* q,
     const uint8_t* e,
     const uint8_t* p);
 
-void mx25519_scalarmult_amd64x(uint8_t* q,
+MX25519_PRIVATE void mx25519_scalarmult_amd64x(uint8_t* q,
     const uint8_t* e,
     const uint8_t* p);
 

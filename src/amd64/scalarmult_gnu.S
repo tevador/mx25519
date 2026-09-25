@@ -36,6 +36,13 @@
 
 .global DECL(mx25519_scalarmult_amd64x)
 .global DECL(mx25519_scalarmult_amd64)
+#if defined(__ELF__)
+.hidden DECL(mx25519_scalarmult_amd64x)
+.hidden DECL(mx25519_scalarmult_amd64)
+#elif defined(__APPLE__)
+.private_extern DECL(mx25519_scalarmult_amd64x)
+.private_extern DECL(mx25519_scalarmult_amd64)
+#endif
 
 #include "constants.inc"
 

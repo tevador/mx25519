@@ -48,7 +48,7 @@ static const mx25519_impl impl_amd64x = {
     .type = MX25519_TYPE_AMD64X
 };
 
-const mx25519_impl* mx25519_impls[4] = {
+const mx25519_impl* const mx25519_impls[4] = {
     &impl_portable,
     &impl_arm64,
     &impl_amd64,

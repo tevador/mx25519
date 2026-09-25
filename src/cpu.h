@@ -7,6 +7,8 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include <mx25519.h>
+
 typedef enum x25519_cpu_cap {
     X25519_CPU_CAP_RDTSCP = 1,
     X25519_CPU_CAP_AVX = 2,
@@ -16,6 +18,6 @@ typedef enum x25519_cpu_cap {
     X25519_CPU_CAP_BMI1 = 32,
 } x25519_cpu_cap;
 
-x25519_cpu_cap mx25519_get_cpu_cap(void);
+MX25519_PRIVATE x25519_cpu_cap mx25519_get_cpu_cap(void);
 
 #endif
