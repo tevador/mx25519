@@ -7,9 +7,11 @@
 #ifndef ARM64_SCALARMULT_H
 #define ARM64_SCALARMULT_H
 
+#include <mx25519.h>
+
 #include <stdint.h>
 
-void mx25519_scalarmult_arm64(uint8_t* q,
+MX25519_PRIVATE void mx25519_scalarmult_arm64(uint8_t* q,
     const uint8_t* e,
     const uint8_t* p);
 

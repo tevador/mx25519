@@ -20,6 +20,6 @@ typedef struct mx25519_impl {
     mx25519_type type;
 } mx25519_impl;
 
-extern const mx25519_impl* mx25519_impls[4];
+extern MX25519_PRIVATE const mx25519_impl* const mx25519_impls[4];
 
 #endif
