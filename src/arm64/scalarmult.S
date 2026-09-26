@@ -10,6 +10,14 @@
 #define DECL(x) x
 #endif
 
+#if defined(__APPLE__)
+#define PAGE(x) x@PAGE
+#define PAGEOFF(x) x@PAGEOFF
+#else
+#define PAGE(x) x
+#define PAGEOFF(x) :lo12:x
+#endif
+
 #if defined(__ARM_FEATURE_BTI_DEFAULT)
 #define BTI_C bti c
 #else
@@ -78,9 +86,9 @@ DECL(mx25519_scalarmult_arm64):
 // |-----------------|------------------------|----------------------|
 // |     168         |                    outptr                     |
 // |-----------------|------------------------|----------------------|
-// |     160         |                        |   invtable pointer   |
-// |-----------------|         unused         |----------------------|
-// |     144         |                        |                      |
+// |     160         |         121666         |   invtable pointer   |
+// |-----------------|------------------------|----------------------|
+// |     144         |         unused         |                      |
 // |-----------------|------------------------|          T3          |
 // |     120         |                        |                      |
 // |-----------------|          X1            |----------------------|
@@ -175,10 +183,15 @@ DECL(mx25519_scalarmult_arm64):
 
 	mov	x0, #(1<<26)-1
 	dup	v30.2d, x0
-	ldr	x0, =0x07fffffe07fffffc
+	mov	x0, #0x07fffffc
+	movk	x0, #0xfffe, lsl #32
+	movk	x0, #0x07ff, lsl #48
 	stp	x0, x0, [sp]
 	sub	x1, x0, #0xfc-0xb4
 	stp	x1, x0, [sp, #8]
+	mov	x1, #(121666 & 0xffff)
+	movk	x1, #(121666 >> 16), lsl #16
+	str	x1, [sp, #160]
 
 	ldr	d28, [sp, #8]
 	ldr	d29, [sp]
@@ -724,7 +737,7 @@ DECL(mx25519_scalarmult_arm64):
 	usra	v20.2d, v19.2d, #21
 	str	x8, [sp, #56+32]
 	mul	v0.2s, v5.2s, v31.2s
-	ldr	x21, =0x07fffffe07fffffc
+	ldr	x21, [sp]
 	shl	v5.2s, v11.2s, #1
 	ldr	x10, [sp, #16]
 	shl	v7.2s, v13.2s, #1
@@ -778,7 +791,7 @@ DECL(mx25519_scalarmult_arm64):
 	usra	v23.2d, v22.2d, #26
 	lsr	x20, x19, #32
 	umlal	v25.2d, v4.2s, v16.2s
-	ldr	x21, =121666
+	ldr	x21, [sp, #160]
 	umlal	v25.2d, v3.2s, v17.2s
 	umaddl	x9, w20, w21, x9
 	usra	v24.2d, v23.2d, #25
@@ -1256,8 +1269,8 @@ mov	v10.d[0], v0.d[1]
 	stp	x12, x13, [sp, #16]
 	str	x14, [sp, #32]
 
-	adr	x10, invtable
-	str	x10, [sp, #160]
+	adrp	x10, PAGE(invtable)
+	add	x10, x10, PAGEOFF(invtable)
 
 .Linvloopnext:
 	ldrh	w11, [x10], #2
@@ -1579,9 +1592,8 @@ mov	v10.d[0], v0.d[1]
 .Lskipstore:
 
 	ldr	x10, [sp, #160]
-	adr	x11, invtable+13*2
-	cmp	x10, x11
-	bne	.Linvloopnext
+	// only the last invtable entry is zero
+	cbnz	w11, .Linvloopnext
 
 	// Final reduce
 	// w5 and w9 are 26 bits instead of 25
@@ -1645,6 +1657,14 @@ mov	v10.d[0], v0.d[1]
 	.size	DECL(mx25519_scalarmult_arm64), .-DECL(mx25519_scalarmult_arm64)
 #endif
 
+#if defined(__APPLE__)
+	.section	__TEXT,__const
+#elif defined(_WIN32)
+	.section	.rdata,"dr"
+#else
+	.section	.rodata
+#endif
+	.align	1
 	//.type	invtable, %object
 invtable:
 	//    	square times,
