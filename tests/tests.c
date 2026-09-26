@@ -59,6 +59,16 @@ static const char test_sc7[] = "010000000000000000000000000000000000000000000000
 static const char test_pt7[] = "1400000000000000000000000000000000000000000000000000000000000000";
 static const char test_re7[] = "1400000000000000000000000000000000000000000000000000000000000000";
 
+/* scalar 1, Z2 entering the inversion needs 558 divsteps */
+static const char test_sc8[] = "0100000000000000000000000000000000000000000000000000000000000000";
+static const char test_pt8[] = "0d17852d429cd3f1353559c2221cea391d3a98dd15064787bc56c5600f4f7457";
+static const char test_re8[] = "0d17852d429cd3f1353559c2221cea391d3a98dd15064787bc56c5600f4f7457";
+
+/* scalar 1, Z2 entering the inversion needs over 600 plain divsteps */
+static const char test_sc9[] = "0100000000000000000000000000000000000000000000000000000000000000";
+static const char test_pt9[] = "a5cdcf951bc1b54ae8e42d8b14ad25e9db85a0faeb8e990e9b94e471cc7e887b";
+static const char test_re9[] = "a5cdcf951bc1b54ae8e42d8b14ad25e9db85a0faeb8e990e9b94e471cc7e887b";
+
 /* DH key exchange tests */
 static const char rfc7748_alice_priv[] = "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a";
 static const char rfc7748_alice_pub[] = "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a";
@@ -206,6 +216,16 @@ static bool test_scmul7_portable() {
     return true;
 }
 
+static bool test_scmul8_portable() {
+    assert(check_scmul_unclamped(test_sc8, test_pt8, test_re8, &no_clamping));
+    return true;
+}
+
+static bool test_scmul9_portable() {
+    assert(check_scmul_unclamped(test_sc9, test_pt9, test_re9, &no_clamping));
+    return true;
+}
+
 static bool test_dh_portable() {
     check_dh();
     return true;
@@ -293,6 +313,22 @@ static bool test_scmul7_arm64() {
         return false;
     }
     assert(check_scmul_unclamped(test_sc7, test_pt7, test_re7, &no_clamping));
+    return true;
+}
+
+static bool test_scmul8_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc8, test_pt8, test_re8, &no_clamping));
+    return true;
+}
+
+static bool test_scmul9_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc9, test_pt9, test_re9, &no_clamping));
     return true;
 }
 
@@ -389,6 +425,22 @@ static bool test_scmul7_amd64() {
     return true;
 }
 
+static bool test_scmul8_amd64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc8, test_pt8, test_re8, &no_clamping));
+    return true;
+}
+
+static bool test_scmul9_amd64() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc9, test_pt9, test_re9, &no_clamping));
+    return true;
+}
+
 static bool test_dh_amd64() {
     if (impl == NULL) {
         return false;
@@ -482,6 +534,22 @@ static bool test_scmul7_amd64x() {
     return true;
 }
 
+static bool test_scmul8_amd64x() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc8, test_pt8, test_re8, &no_clamping));
+    return true;
+}
+
+static bool test_scmul9_amd64x() {
+    if (impl == NULL) {
+        return false;
+    }
+    assert(check_scmul_unclamped(test_sc9, test_pt9, test_re9, &no_clamping));
+    return true;
+}
+
 static bool test_dh_amd64x() {
     if (impl == NULL) {
         return false;
@@ -516,6 +584,8 @@ int main() {
     RUN_TEST(test_scmul5_portable);
     RUN_TEST(test_scmul6_portable);
     RUN_TEST(test_scmul7_portable);
+    RUN_TEST(test_scmul8_portable);
+    RUN_TEST(test_scmul9_portable);
     RUN_TEST(test_dh_portable);
     RUN_TEST(test_mul_base_times1_portable);
     RUN_TEST(test_select_arm64);
@@ -527,6 +597,8 @@ int main() {
     RUN_TEST(test_scmul5_arm64);
     RUN_TEST(test_scmul6_arm64);
     RUN_TEST(test_scmul7_arm64);
+    RUN_TEST(test_scmul8_arm64);
+    RUN_TEST(test_scmul9_arm64);
     RUN_TEST(test_dh_arm64);
     RUN_TEST(test_mul_base_times1_arm64);
     RUN_TEST(test_select_amd64);
@@ -538,6 +610,8 @@ int main() {
     RUN_TEST(test_scmul5_amd64);
     RUN_TEST(test_scmul6_amd64);
     RUN_TEST(test_scmul7_amd64);
+    RUN_TEST(test_scmul8_amd64);
+    RUN_TEST(test_scmul9_amd64);
     RUN_TEST(test_dh_amd64);
     RUN_TEST(test_mul_base_times1_amd64);
     RUN_TEST(test_select_amd64x);
@@ -549,6 +623,8 @@ int main() {
     RUN_TEST(test_scmul5_amd64x);
     RUN_TEST(test_scmul6_amd64x);
     RUN_TEST(test_scmul7_amd64x);
+    RUN_TEST(test_scmul8_amd64x);
+    RUN_TEST(test_scmul9_amd64x);
     RUN_TEST(test_dh_amd64x);
     RUN_TEST(test_mul_base_times1_amd64x);
 
