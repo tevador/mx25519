@@ -81,7 +81,6 @@ set_property(TARGET mx25519-tests PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_executable(mx25519-bench
   tests/bench.c
-  src/cpu.c
   src/platform.c)
 target_include_directories(mx25519-bench PRIVATE src)
 target_compile_definitions(mx25519-bench PRIVATE MX25519_STATIC)

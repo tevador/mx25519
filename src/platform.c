@@ -5,7 +5,6 @@
 */
 
 #include "platform.h"
-#include "cpu.h"
 #include <time.h>
 
 #if defined(PLATFORM_WIN)
@@ -16,19 +15,25 @@
 
 #if defined(_MSC_VER)
 #include <intrin.h>
+#elif defined(PLATFORM_X86) || defined(PLATFORM_AMD64)
+#include <cpuid.h>
+#include <x86intrin.h>
 #endif
 
 uint64_t mx25519_cpu_cycles() {
 #if defined(PLATFORM_X86) || defined(PLATFORM_AMD64)
-    if (mx25519_cpu_has_rdtscp()) {
+    /* CPUID is used only to serialize the pipeline before reading the TSC.
+       Its result is checked so that the compiler cannot discard the call. */
 #if defined(_MSC_VER)
-        uint32_t aux;
-        return __rdtscp(&aux);
+    int info[4];
+    __cpuid(info, 0);
+    unsigned int max_leaf = (unsigned int)info[0];
 #else
-        uint32_t lo, hi;
-        __asm__ volatile("rdtscp" : "=a"(lo), "=d"(hi) : : "%ecx");
-        return ((uint64_t)hi << 32) | lo;
+    unsigned int max_leaf, b, c, d;
+    __cpuid(0, max_leaf, b, c, d);
 #endif
+    if (max_leaf >= 1) {
+        return __rdtsc();
     }
 #endif
 #if defined(PLATFORM_ARM64)
