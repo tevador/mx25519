@@ -1,4 +1,22 @@
+# Copyright (c) 2022-2026 tevador <tevador@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 cmake_minimum_required(VERSION 3.10)
+
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif()
 
 set(MX25519_VERSION 1)
 
@@ -9,6 +27,8 @@ src/portable/scalarmult.c
 src/cpu.c
 src/impl.c
 src/mx25519.c)
+
+option(MX25519_COPYLEFT "Include the MPL-2.0 licensed assembly backends (ARM64, AMD64, AMD64X)" ON)
 
 if(NOT ARCH_ID)
   # allow cross compiling
@@ -29,8 +49,14 @@ endif()
 
 message(STATUS "Build architecture: ${ARCH_ID}")
 
+if(MX25519_COPYLEFT)
+message(STATUS "Assembly backends (MPL-2.0): enabled")
+else()
+message(STATUS "Assembly backends (MPL-2.0): disabled")
+endif()
+
 # AMD64
-if((CMAKE_SIZEOF_VOID_P EQUAL 8) AND (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "amd64"))
+if(MX25519_COPYLEFT AND (CMAKE_SIZEOF_VOID_P EQUAL 8) AND (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "amd64"))
   if(MSVC)
     enable_language(ASM_MASM)
     list(APPEND mx25519_sources src/amd64/scalarmult_masm.asm)
@@ -43,7 +69,7 @@ if((CMAKE_SIZEOF_VOID_P EQUAL 8) AND (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQ
 endif()
 
 # ARM64
-if(ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "armv8-a")
+if(MX25519_COPYLEFT AND (ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "armv8-a"))
   list(APPEND mx25519_sources src/arm64/scalarmult.S)
   set_property(SOURCE src/arm64/scalarmult.S PROPERTY LANGUAGE C)
   set_property(SOURCE src/arm64/scalarmult.S PROPERTY XCODE_EXPLICIT_FILE_TYPE sourcecode.asm)
@@ -66,6 +92,11 @@ target_include_directories(mx25519_static
   PUBLIC include/)
 set_target_properties(mx25519_static PROPERTIES OUTPUT_NAME mx25519)
 target_compile_definitions(mx25519_static PUBLIC MX25519_STATIC)
+
+if(NOT MX25519_COPYLEFT)
+  target_compile_definitions(mx25519 PRIVATE MX25519_NO_COPYLEFT)
+  target_compile_definitions(mx25519_static PRIVATE MX25519_NO_COPYLEFT)
+endif()
 
 add_executable(mx25519-tests
   tests/tests.c)

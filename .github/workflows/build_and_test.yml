@@ -23,6 +23,14 @@ jobs:
           cmake --build build
           ./build/mx25519-tests
 
+      - name: Build & test (portable only)
+        run: |
+          cmake -S . -B build-portable -DMX25519_COPYLEFT=off
+          cmake --build build-portable
+          ./build-portable/mx25519-tests
+          nm build-portable/libmx25519.a build-portable/libmx25519.so > symbols.txt
+          if grep 'mx25519_scalarmult_amd64' symbols.txt; then exit 1; fi
+
       - name: Build & test (sanitizers)
         run: |
           cmake -S . -B build-san -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all"
@@ -75,6 +83,14 @@ jobs:
           cmake -S . -B build
           cmake --build build
           ./build/mx25519-tests
+
+      - name: Build & test (portable only)
+        run: |
+          cmake -S . -B build-portable -DMX25519_COPYLEFT=off
+          cmake --build build-portable
+          ./build-portable/mx25519-tests
+          nm build-portable/libmx25519.a build-portable/libmx25519.dylib > symbols.txt
+          if grep 'mx25519_scalarmult_arm64' symbols.txt; then exit 1; fi
 
   windows-msvc:
     name: Windows (MSVC)
