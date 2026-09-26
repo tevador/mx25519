@@ -27,44 +27,46 @@ static uint32_t xgetbv0(void) {
 #endif
 
 x25519_cpu_cap mx25519_get_cpu_cap() {
-    static x25519_cpu_cap cap = -1;
-    if (cap == -1) {
-        cap = 0;
+    x25519_cpu_cap cap = 0;
 #ifdef HAVE_CPUID
-        uint32_t info[4];
-        cpuid(info, 0);
-        uint32_t num_ids = info[0];
-        if (num_ids >= 0x00000001) {
-            cpuid(info, 0x00000001);
-            if ((info[2] & (1 << 28)) && (info[2] & (1 << 27))
-                && (xgetbv0() & 6) == 6) {
-                cap |= X25519_CPU_CAP_AVX;
-            }
+    uint32_t info[4];
+    cpuid(info, 0);
+    uint32_t num_ids = info[0];
+    if (num_ids >= 0x00000001) {
+        cpuid(info, 0x00000001);
+        if ((info[2] & (1 << 28)) && (info[2] & (1 << 27))
+            && (xgetbv0() & 6) == 6) {
+            cap |= X25519_CPU_CAP_AVX;
         }
-        if (num_ids >= 0x00000007) {
-            cpuid(info, 0x00000007);
-            if (info[1] & (1 << 3)) {
-                cap |= X25519_CPU_CAP_BMI1;
-            }
-            if ((info[1] & (1 << 5)) && (cap & X25519_CPU_CAP_AVX)) {
-                cap |= X25519_CPU_CAP_AVX2;
-            }
-            if (info[1] & (1 << 8)) {
-                cap |= X25519_CPU_CAP_MULX;
-            }
-            if (info[1] & (1 << 19)) {
-                cap |= X25519_CPU_CAP_ADX;
-            }
-        }
-        cpuid(info, 0x80000000);
-        uint32_t num_ext_ids = info[0];
-        if (num_ext_ids >= 0x80000001) {
-            cpuid(info, 0x80000001);
-            if (info[3] & (1 << 27)) {
-                cap |= X25519_CPU_CAP_RDTSCP;
-            }
-        }
-#endif
     }
+    if (num_ids >= 0x00000007) {
+        cpuid(info, 0x00000007);
+        if (info[1] & (1 << 3)) {
+            cap |= X25519_CPU_CAP_BMI1;
+        }
+        if ((info[1] & (1 << 5)) && (cap & X25519_CPU_CAP_AVX)) {
+            cap |= X25519_CPU_CAP_AVX2;
+        }
+        if (info[1] & (1 << 8)) {
+            cap |= X25519_CPU_CAP_MULX;
+        }
+        if (info[1] & (1 << 19)) {
+            cap |= X25519_CPU_CAP_ADX;
+        }
+    }
+#endif
     return cap;
+}
+
+bool mx25519_cpu_has_rdtscp(void) {
+#ifdef HAVE_CPUID
+    uint32_t info[4];
+    cpuid(info, 0x80000000);
+    uint32_t num_ext_ids = info[0];
+    if (num_ext_ids >= 0x80000001) {
+        cpuid(info, 0x80000001);
+        return (info[3] & (1 << 27)) != 0;
+    }
+#endif
+    return false;
 }
