@@ -1230,6 +1230,28 @@ mov	v10.d[0], v0.d[1]
 	mov	x13, v6.d[0]
 	mov	x14, v8.d[0]
 
+	// Wipe X2, X3, Z2, Z3
+	movi	v0.2d, #0
+	movi	v1.2d, #0
+	movi	v2.2d, #0
+	movi	v3.2d, #0
+	movi	v4.2d, #0
+	movi	v5.2d, #0
+	movi	v6.2d, #0
+	movi	v7.2d, #0
+	movi	v16.2d, #0
+	movi	v17.2d, #0
+	movi	v18.2d, #0
+	movi	v19.2d, #0
+	movi	v20.2d, #0
+	movi	v21.2d, #0
+	movi	v22.2d, #0
+	movi	v23.2d, #0
+	movi	v24.2d, #0
+	movi	v25.2d, #0
+	movi	v26.2d, #0
+	movi	v27.2d, #0
+
 	stp	x10, x11, [sp]
 	stp	x12, x13, [sp, #16]
 	str	x14, [sp, #32]
