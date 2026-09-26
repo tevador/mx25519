@@ -19,6 +19,5 @@ typedef enum x25519_cpu_cap {
 } x25519_cpu_cap;
 
 MX25519_PRIVATE x25519_cpu_cap mx25519_get_cpu_cap(void);
-MX25519_PRIVATE bool mx25519_cpu_has_rdtscp(void);
 
 #endif

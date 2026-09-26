@@ -57,16 +57,3 @@ x25519_cpu_cap mx25519_get_cpu_cap() {
 #endif
     return cap;
 }
-
-bool mx25519_cpu_has_rdtscp(void) {
-#ifdef HAVE_CPUID
-    uint32_t info[4];
-    cpuid(info, 0x80000000);
-    uint32_t num_ext_ids = info[0];
-    if (num_ext_ids >= 0x80000001) {
-        cpuid(info, 0x80000001);
-        return (info[3] & (1 << 27)) != 0;
-    }
-#endif
-    return false;
-}
