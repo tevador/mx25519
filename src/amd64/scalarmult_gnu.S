@@ -44,11 +44,15 @@
 .private_extern DECL(mx25519_scalarmult_amd64)
 #endif
 
+#if defined(__ELF__)
+.section .rodata
+#endif
 #include "constants.inc"
 
 ALIGN 32
 #include "gcd_table.inc"
 
+.text
 ALIGN 32
 FUNC_TYPE(mx25519_scalarmult_amd64x)
 DECL(mx25519_scalarmult_amd64x):
