@@ -2039,6 +2039,29 @@ mov    qword ptr [rdi+8], r9
 mov    qword ptr [rdi+16], r10
 mov    qword ptr [rdi+24], r11
 
+;# wipe T0, T1, T2, T3, T4 from the stack
+xor    ebx, ebx
+mov    qword ptr [rsp+0], rbx
+mov    qword ptr [rsp+8], rbx
+mov    qword ptr [rsp+16], rbx
+mov    qword ptr [rsp+24], rbx
+mov    qword ptr [rsp+32], rbx
+mov    qword ptr [rsp+40], rbx
+mov    qword ptr [rsp+48], rbx
+mov    qword ptr [rsp+56], rbx
+mov    qword ptr [rsp+64], rbx
+mov    qword ptr [rsp+72], rbx
+mov    qword ptr [rsp+80], rbx
+mov    qword ptr [rsp+88], rbx
+mov    qword ptr [rsp+96], rbx
+mov    qword ptr [rsp+104], rbx
+mov    qword ptr [rsp+112], rbx
+mov    qword ptr [rsp+120], rbx
+mov    qword ptr [rsp+128], rbx
+mov    qword ptr [rsp+136], rbx
+mov    qword ptr [rsp+144], rbx
+mov    qword ptr [rsp+152], rbx
+
 ;# restore registers
 mov    rbx, qword ptr [rsp+288]
 mov    rbp, qword ptr [rsp+296]

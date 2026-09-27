@@ -2265,7 +2265,32 @@ sbb rdi, 0
 sbb rbx, 0
 sbb rbp, 0
 
-vzeroupper
+;# wipe the inversion scratch space from the stack
+vpxor ymm0, ymm0, ymm0
+vmovapd ymmword ptr [rsp+0], ymm0
+vmovapd ymmword ptr [rsp+32], ymm0
+vmovapd ymmword ptr [rsp+64], ymm0
+vmovapd ymmword ptr [rsp+96], ymm0
+vmovapd ymmword ptr [rsp+128], ymm0
+vmovapd ymmword ptr [rsp+160], ymm0
+vmovapd ymmword ptr [rsp+192], ymm0
+vmovapd ymmword ptr [rsp+224], ymm0
+vmovapd ymmword ptr [rsp+256], ymm0
+vmovapd ymmword ptr [rsp+288], ymm0
+vmovapd ymmword ptr [rsp+320], ymm0
+vmovapd ymmword ptr [rsp+352], ymm0
+vmovapd ymmword ptr [rsp+384], ymm0
+vmovapd ymmword ptr [rsp+416], ymm0
+vmovapd ymmword ptr [rsp+448], ymm0
+vmovapd ymmword ptr [rsp+480], ymm0
+vmovapd ymmword ptr [rsp+512], ymm0
+vmovapd ymmword ptr [rsp+544], ymm0
+vmovapd ymmword ptr [rsp+576], ymm0
+vmovapd ymmword ptr [rsp+608], ymm0
+vmovapd ymmword ptr [rsp+640], ymm0
+vmovapd ymmword ptr [rsp+672], ymm0
+
+vzeroall
 
 ;# inverse in: rbp rbx rdi rsi
 ;# result ← X2 · Z2^(-1)
@@ -2371,6 +2396,9 @@ mov    qword ptr [rdi], r8
 mov    qword ptr [rdi+8], r9
 mov    qword ptr [rdi+16], r10
 mov    qword ptr [rdi+24], r11
+
+;# wipe X2 from the stack
+vmovapd ymmword ptr [rsp+704], ymm0
 
 ;# restore registers
 mov    rbx, qword ptr [rsp+736]

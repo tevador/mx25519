@@ -7,7 +7,7 @@
 #include "scalarmult.h"
 #include "fe.h"
 
-void mx25519_scalarmult_portable(uint8_t* q,
+static NOINLINE void scalarmult(uint8_t* q,
     const uint8_t* e,
     const uint8_t* p)
 {
@@ -66,4 +66,35 @@ void mx25519_scalarmult_portable(uint8_t* q,
     /* clear the last key bit, works due to being a volatile store */
     swap = 0;
     b = 0;
+}
+
+/* "all", not "used": the registers to clear were set by scalarmult */
+/* outside x86 and AArch64, some compilers crash on it or reject it */
+#if defined(__i386) || defined(__x86_64__) || defined(__aarch64__)
+#if defined(__has_attribute)
+#if __has_attribute(zero_call_used_regs)
+#define ZERO_CALL_USED_REGS __attribute__((zero_call_used_regs("all")))
+#endif
+#endif
+#endif
+#ifndef ZERO_CALL_USED_REGS
+#define ZERO_CALL_USED_REGS
+#endif
+
+/* here, not on the caller: GCC skips the zeroing before a tail call */
+static NOINLINE ZERO_CALL_USED_REGS void burn_stack(void)
+{
+    volatile uint64_t buf[512];
+    size_t i;
+    for (i = 0; i < sizeof(buf) / sizeof(buf[0]); ++i) {
+        buf[i] = 0;
+    }
+}
+
+void mx25519_scalarmult_portable(uint8_t* q,
+    const uint8_t* e,
+    const uint8_t* p)
+{
+    scalarmult(q, e, p);
+    burn_stack();
 }

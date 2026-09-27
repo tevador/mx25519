@@ -1639,6 +1639,33 @@ mov	v10.d[0], v0.d[1]
 	stp	x10, x11, [x17] // todo: fix for unaligned store
 	stp	x12, x13, [x17, #16]
 
+	// Wipe T0-T3
+	stp	xzr, xzr, [sp]
+	stp	xzr, xzr, [sp, #16]
+	stp	xzr, xzr, [sp, #32]
+	stp	xzr, xzr, [sp, #48]
+	stp	xzr, xzr, [sp, #64]
+	stp	xzr, xzr, [sp, #80]
+	stp	xzr, xzr, [sp, #96]
+	stp	xzr, xzr, [sp, #112]
+	stp	xzr, xzr, [sp, #128]
+	stp	xzr, xzr, [sp, #144]
+
+	// Wipe the unreduced result
+	mov	x0, xzr
+	mov	x1, xzr
+	mov	x2, xzr
+	mov	x3, xzr
+	mov	x4, xzr
+	mov	x5, xzr
+	mov	x6, xzr
+	mov	x7, xzr
+	mov	x8, xzr
+	mov	x9, xzr
+	mov	x14, xzr
+	mov	x15, xzr
+	mov	x16, xzr
+
 	add sp, sp, 176
 
 	ldp	x19, x20, [sp, #16]
