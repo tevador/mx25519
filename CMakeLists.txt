@@ -22,10 +22,6 @@ if(NOT ARM_ID)
   set(ARM_ID "${ARCH_ID}")
 endif()
 
-if(NOT ARCH)
-  set(ARCH "default")
-endif()
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
@@ -39,7 +35,6 @@ if((CMAKE_SIZEOF_VOID_P EQUAL 8) AND (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQ
     enable_language(ASM_MASM)
     list(APPEND mx25519_sources src/amd64/scalarmult_masm.asm)
     set_property(SOURCE src/amd64/scalarmult_masm.asm PROPERTY LANGUAGE ASM_MASM)
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /DRELWITHDEBINFO")
   else()
     list(APPEND mx25519_sources src/amd64/scalarmult_gnu.S)
     set_property(SOURCE src/amd64/scalarmult_gnu.S PROPERTY LANGUAGE C)

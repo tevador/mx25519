@@ -8,7 +8,6 @@
 #define PLATFORM_H
 
 #include <stdint.h>
-#include <string.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define PLATFORM_WIN
@@ -20,8 +19,6 @@
 #define PLATFORM_AMD64
 #elif defined(_M_ARM64) || defined(__aarch64__)
 #define PLATFORM_ARM64
-#else
-
 #endif
 
 #ifdef _MSC_VER
