@@ -7,8 +7,6 @@
 #include "platform.h"
 
 #include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
 #include <math.h>
 
 #include <mx25519.h>

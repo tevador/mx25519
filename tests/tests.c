@@ -165,7 +165,6 @@ static void check_dh() {
 static bool test_select_auto() {
     impl = mx25519_select_impl(MX25519_TYPE_AUTO);
     assert(impl != NULL);
-    mx25519_type type = mx25519_impl_type(impl);
     return true;
 }
 

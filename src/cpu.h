@@ -8,7 +8,6 @@
 #define CPU_H
 
 #include <mx25519.h>
-#include <stdbool.h>
 
 typedef enum x25519_cpu_cap {
     X25519_CPU_CAP_AVX = 2,
