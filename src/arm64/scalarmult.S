@@ -10,14 +10,6 @@
 #define DECL(x) x
 #endif
 
-#if defined(__APPLE__)
-#define PAGE(x) x@PAGE
-#define PAGEOFF(x) x@PAGEOFF
-#else
-#define PAGE(x) x
-#define PAGEOFF(x) :lo12:x
-#endif
-
 #if defined(__ARM_FEATURE_BTI_DEFAULT)
 #define BTI_C bti c
 #else
@@ -41,7 +33,7 @@
  * reduced modulo 2^256-38, and may possibly be in the range [2^256-38..2^256).
  * The scalar is a 256-bit integer where certain bits are hardcoded per specification.
  *
- * The implementation runs in constant time (~145k cycles on Cortex-A53),
+ * The implementation runs in constant time (~137k cycles on Cortex-A53),
  * and no conditional branches or memory access pattern depend on secret data.
  */
 
@@ -71,47 +63,49 @@ DECL(mx25519_scalarmult_arm64):
 	stp	d10, d11, [sp, #112]
 	stp	d12, d13, [sp, #128]
 	stp	d14, d15, [sp, #144]
-	sub	sp, sp, 176
+	sub	sp, sp, 160
 
 // |-----------------|------------------------|----------------------|
 // |                        Stack layout                             |
 // |-----------------|------------------------|----------------------|
 // | offset from sp  |       ladder           |      inversion       |
 // |-----------------|------------------------|----------------------|
-// |     272         |                saved: d8 - d15                |
+// |     256         |                saved: d8 - d15                |
 // |-----------------|------------------------|----------------------|
-// |     192         |               saved: x19 - x28                |
+// |     176         |               saved: x19 - x28                |
 // |-----------------|------------------------|----------------------|
-// |     176         |           saved: x29 (fp), x30 (lr)           |
+// |     160         |           saved: x29 (fp), x30 (lr)           |
 // |-----------------|------------------------|----------------------|
-// |     168         |                    outptr                     |
+// |     152         |                    outptr                     |
 // |-----------------|------------------------|----------------------|
-// |     160         |         121666         |   invtable pointer   |
-// |-----------------|------------------------|----------------------|
-// |     144         |         unused         |                      |
-// |-----------------|------------------------|          T3          |
-// |     120         |                        |                      |
+// |     144         |         121666         |                      |
+// |-----------------|------------------------|        unused        |
+// |     112         |                        |                      |
 // |-----------------|          X1            |----------------------|
 // |     104         |                        |                      |
 // |-----------------|------------------------|                      |
 // |     100         |      lastbit (4B)      |                      |
-// |-----------------|------------------------|          T2          |
-// |      96         |      counter (4B)      |                      |
+// |-----------------|------------------------|    Z2 -> inv(Z2)     |
+// |      96         |      counter (4B)      |     radix 2^64       |
 // |-----------------|------------------------|                      |
 // |      80         |                        |                      |
 // |-----------------|          B/BB          |----------------------|
 // |      56         |                        |                      |
-// |-----------------|------------------------|          T1          |
+// |-----------------|------------------------|        unused        |
 // |      40         |                        |                      |
 // |-----------------|          AA            |----------------------|
 // |      16         |                        |                      |
 // |-----------------|------------------------|                      |
-// |       8         |         mask2          |          T0          |
-// |-----------------|------------------------|                      |
+// |       8         |         mask2          |          X2          |
+// |-----------------|------------------------|     radix 2^25.5     |
 // |       0         |         mask1          |                      |
 // |-----------------|------------------------|----------------------|
+// |    -544         |                        |    scratch space     |
+// |-----------------|------------------------|----------------------|
+//
+// The scratch space below sp is the frame of the inversion call.
 
-	str	x0, [sp, #168] // outptr
+	str	x0, [sp, #152] // outptr
 
 	mov	w30, #19
 	dup	v31.2s, w30
@@ -191,7 +185,7 @@ DECL(mx25519_scalarmult_arm64):
 	stp	x1, x0, [sp, #8]
 	mov	x1, #(121666 & 0xffff)
 	movk	x1, #(121666 >> 16), lsl #16
-	str	x1, [sp, #160]
+	str	x1, [sp, #144]
 
 	ldr	d28, [sp, #8]
 	ldr	d29, [sp]
@@ -791,7 +785,7 @@ DECL(mx25519_scalarmult_arm64):
 	usra	v23.2d, v22.2d, #26
 	lsr	x20, x19, #32
 	umlal	v25.2d, v4.2s, v16.2s
-	ldr	x21, [sp, #160]
+	ldr	x21, [sp, #144]
 	umlal	v25.2d, v3.2s, v17.2s
 	umaddl	x9, w20, w21, x9
 	usra	v24.2d, v23.2d, #25
@@ -1231,198 +1225,103 @@ mov	v10.d[0], v0.d[1]
 	mov	w8, v9.s[0]
 	mov	w9, v9.s[1]
 
-	stp	w0, w1, [sp, #80]
-	stp	w2, w3, [sp, #88]
-	stp	w4, w5, [sp, #96]
-	stp	w6, w7, [sp, #104]
-	stp	w8, w9, [sp, #112]
+	// X2 -> sp+0
+	mov	x20, v0.d[0]
+	mov	x21, v2.d[0]
+	mov	x22, v4.d[0]
+	mov	x23, v6.d[0]
+	mov	x24, v8.d[0]
 
-	mov	x10, v0.d[0]
-	mov	x11, v2.d[0]
-	mov	x12, v4.d[0]
-	mov	x13, v6.d[0]
-	mov	x14, v8.d[0]
+	stp	x20, x21, [sp]
+	stp	x22, x23, [sp, #16]
+	str	x24, [sp, #32]
 
-	// Wipe X2, X3, Z2, Z3
-	movi	v0.2d, #0
-	movi	v1.2d, #0
-	movi	v2.2d, #0
-	movi	v3.2d, #0
-	movi	v4.2d, #0
-	movi	v5.2d, #0
-	movi	v6.2d, #0
-	movi	v7.2d, #0
-	movi	v16.2d, #0
-	movi	v17.2d, #0
-	movi	v18.2d, #0
-	movi	v19.2d, #0
-	movi	v20.2d, #0
-	movi	v21.2d, #0
-	movi	v22.2d, #0
-	movi	v23.2d, #0
-	movi	v24.2d, #0
-	movi	v25.2d, #0
-	movi	v26.2d, #0
-	movi	v27.2d, #0
-
-	stp	x10, x11, [sp]
-	stp	x12, x13, [sp, #16]
-	str	x14, [sp, #32]
-
-	adrp	x10, PAGE(invtable)
-	add	x10, x10, PAGEOFF(invtable)
-
-.Linvloopnext:
-	ldrh	w11, [x10], #2
-	mov	v20.s[0], w11
-	str	x10, [sp, #160]
-
-	and	w12, w11, #0x7f
-	subs	w30, w12, #1 // square times
-	bmi	.Lskipsquare
-
-	mov	w23, w3
-	mov	w24, w4
-	mov	w25, w5
-	mov	w26, w6
-	mov	w27, w7
-	mov	w14, w8
-	add	w10, w0, w0
-	add	w11, w1, w1
-	add	w12, w2, w2
-
-.Lsqrloop1:
-	umull	x20, w0, w0
-		add	x4, x24, x23, lsr #25
-	umull	x21, w10, w1
-		and	x3, x23, #0x1ffffff
-	umull	x22, w10, w2
-		add	w13, w3, w3
-	umull	x23, w10, w3
-		add	x5, x25, x4, lsr #26
-	umull	x24, w11, w13
-		and	x4, x4, #0x3ffffff
-	umull	x28, w4, w4
-		add	x6, x26, x5, lsr #25
-	umull	x25, w12, w3
-		and	x5, x5, #0x1ffffff
-	umull	x26, w13, w3
-		add	w15, w5, w5
-	umaddl	x28, w13, w15, x28
-		add	x7, x27, x6, lsr #26
-	umull	x19, w4, w15
-		and	x6, x6, #0x3ffffff
-	umull	x27, w11, w6
-		add	x8, x14, x7, lsr #25
-	umaddl	x28, w12, w6, x28
-		and	x7, x7, #0x1ffffff
-	umaddl	x19, w13, w6, x19
-		add	x9, x9, x8, lsr #26
-	umaddl	x27, w10, w7, x27
-		add	w17, w7, w7
-	umaddl	x28, w11, w17, x28
-		and	x8, x8, #0x3ffffff
-	umaddl	x19, w10, w9, x19
-		add	w14, w9, w9
-	umaddl	x27, w12, w5, x27
-		add	w16, w14, w14, lsl #1
-	umaddl	x28, w10, w8, x28
-		add	w3, w15, w15, lsl #1
-	umaddl	x19, w12, w7, x19
-		add	w16, w16, w14, lsl #4
-	umaddl	x27, w13, w4, x27
-		add	w3, w3, w15, lsl #4
-	umaddl	x28, w16, w9, x28
-
-	umaddl	x19, w11, w8, x19
-		add	w9, w6, w6, lsl #1
-	umaddl	x20, w3, w5, x20
-
-	umaddl	x24, w10, w4, x24
-		add	w9, w9, w6, lsl #4
-	umaddl	x25, w10, w5, x25
-		add	x19, x19, x28, lsr #26
-	umaddl	x26, w10, w6, x26
-		and	x14, x28, #0x3ffffff
-	umaddl	x22, w11, w1, x22
-		add	x20, x20, x19, lsr #25
-	umaddl	x23, w11, w2, x23
-		bic	x1, x19, #0x1ffffff
-	umaddl	x26, w12, w4, x26
-		add	x20, x20, x1, lsr #24
-	umaddl	x24, w2, w2, x24
-		add	w0, w4, w4
-	umaddl	x25, w11, w4, x25
-		add	x20, x20, x1, lsr #21
-	umaddl	x26, w11, w15, x26
-		add	w1, w17, w17, lsl #1
-	umaddl	x20, w9, w0, x20
-
-	umaddl	x21, w9, w15, x21
-		add	w1, w1, w17, lsl #4
-	umaddl	x22, w9, w6, x22
-		add	w10, w8, w8, lsl #1
-	umaddl	x20, w1, w13, x20
-		and	x9, x19, #0x1ffffff
-	umaddl	x21, w1, w4, x21
-		add	w10, w10, w8, lsl #4
-	umaddl	x22, w1, w15, x22
-		subs	w30, w30, #1
-	umaddl	x20, w10, w12, x20
-
-	umaddl	x21, w10, w13, x21
-
-	umaddl	x22, w10, w0, x22
-
-	umaddl	x20, w16, w11, x20
-
-	umaddl	x21, w16, w2, x21
-
-	umaddl	x22, w16, w13, x22
-		add	w11, w6, w6
-	umaddl	x23, w1, w6, x23
-
-	umaddl	x24, w1, w7, x24
-		add	x21, x21, x20, lsr #26
-	umaddl	x26, w10, w8, x26
-		and	x0, x20, #0x3ffffff
-	umaddl	x23, w10, w15, x23
-		add	x22, x22, x21, lsr #25
-	umaddl	x24, w10, w11, x24
-		and	x1, x21, #0x1ffffff
-	umaddl	x25, w10, w17, x25
-		and	x2, x22, #0x3ffffff
-	umaddl	x23, w16, w4, x23
-		add	w10, w0, w0
-	umaddl	x24, w16, w15, x24
-		add	w11, w1, w1
-	umaddl	x25, w16, w6, x25
-		add	w12, w2, w2
-	umaddl	x26, w16, w17, x26
-		add	x23, x23, x22, lsr #26
-	umaddl	x27, w16, w8, x27
-		bpl	.Lsqrloop1
-
-	mov	w11, v20.s[0]
-	add	x4, x24, x23, lsr #25
-	and	x3, x23, #0x1ffffff
-	add	x5, x25, x4, lsr #26
+	// Z2 -> sp+80, packed into 4x64 bit limbs
+	mov	w19, #19
+	add	x1, x1, x0, lsr #26
+	and	x0, x0, #0x3ffffff
+	add	x2, x2, x1, lsr #25
+	and	x1, x1, #0x1ffffff
+	add	x3, x3, x2, lsr #26
+	and	x2, x2, #0x3ffffff
+	add	x4, x4, x3, lsr #25
+	and	x3, x3, #0x1ffffff
+	add	x5, x5, x4, lsr #26
 	and	x4, x4, #0x3ffffff
-	add	x6, x26, x5, lsr #25
+	add	x6, x6, x5, lsr #25
 	and	x5, x5, #0x1ffffff
-	add	x7, x27, x6, lsr #26
+	add	x7, x7, x6, lsr #26
 	and	x6, x6, #0x3ffffff
-	add	x8, x14, x7, lsr #25
+	add	x8, x8, x7, lsr #25
 	and	x7, x7, #0x1ffffff
 	add	x9, x9, x8, lsr #26
 	and	x8, x8, #0x3ffffff
-.Lskipsquare:
-	mov	w12, #40
-	tst	w11, #1<<8
-	ubfx	w13, w11, #9, #2
-	bne	.Lskipmul
-	mul	w20, w13, w12
-	add	x20, sp, x20
+	lsr	x14, x9, #25
+	and	x9, x9, #0x1ffffff
+	umaddl	x0, w14, w19, x0
+	add	x1, x1, x0, lsr #26
+	and	x0, x0, #0x3ffffff
+	add	x2, x2, x1, lsr #25
+	and	x1, x1, #0x1ffffff
+	add	x3, x3, x2, lsr #26
+	and	x2, x2, #0x3ffffff
+	add	x4, x4, x3, lsr #25
+	and	x3, x3, #0x1ffffff
+	add	x5, x5, x4, lsr #26
+	and	x4, x4, #0x3ffffff
+	add	x6, x6, x5, lsr #25
+	and	x5, x5, #0x1ffffff
+	add	x7, x7, x6, lsr #26
+	and	x6, x6, #0x3ffffff
+	add	x8, x8, x7, lsr #25
+	and	x7, x7, #0x1ffffff
+	add	x9, x9, x8, lsr #26
+	and	x8, x8, #0x3ffffff
+	lsr	x14, x9, #25
+	and	x9, x9, #0x1ffffff
+	umaddl	x0, w14, w19, x0
+
+	orr	x10, x0, x1, lsl #26
+	orr	x10, x10, x2, lsl #51
+
+	lsr	x11, x2, #13
+	orr	x11, x11, x3, lsl #13
+	orr	x11, x11, x4, lsl #38
+
+	orr	x12, x5, x6, lsl #25
+	orr	x12, x12, x7, lsl #51
+
+	lsr	x13, x7, #13
+	orr	x13, x13, x8, lsl #12
+	orr	x13, x13, x9, lsl #38
+
+	stp	x10, x11, [sp, #80]
+	stp	x12, x13, [sp, #96]
+
+	// Z2^(-1) -> sp+80, in place
+	add	x0, sp, #80
+	mov	x1, x0
+	bl	.Linv25519
+
+	// unpack Z2^(-1) into radix-2^25.5 limbs
+	ldp	x10, x11, [sp, #80]
+	ldp	x12, x13, [sp, #96]
+
+	and	x0, x10, #0x3ffffff
+	ubfx	x1, x10, #26, #25
+	extr	x2, x11, x10, #51
+	ubfx	x3, x11, #13, #25
+	lsr	x4, x11, #38
+	and	x2, x2, #0x3ffffff
+	and	x5, x12, #0x1ffffff
+	ubfx	x6, x12, #25, #26
+	extr	x7, x13, x12, #51
+	ubfx	x8, x13, #12, #26
+	lsr	x9, x13, #38
+	and	x7, x7, #0x1ffffff
+
+	// result = X2 * Z2^(-1)
+	mov	x20, sp // X2
 
 	ldp	w10, w11, [x20]
 	ldp	w12, w13, [x20, #8]
@@ -1572,28 +1471,10 @@ mov	v10.d[0], v0.d[1]
 	and	x4, x4, #0x3ffffff
 	and	x5, x5, #0x3ffffff
 
-	mov	w11, v20.s[0]
 	mov	w6, w24
 	lsr	x7, x24, #32
 	mov	w8, w22
 	lsr	x9, x22, #32
-.Lskipmul:
-	ubfx	w12, w11, #11, #2
-	cbz	w12, .Lskipstore
-	mov	w13, #40
-	mul	w12, w12, w13
-	add	x12, sp, x12
-
-	stp	w0, w1, [x12]
-	stp	w2, w3, [x12, #8]
-	stp	w4, w5, [x12, #16]
-	stp	w6, w7, [x12, #24]
-	stp	w8, w9, [x12, #32]
-.Lskipstore:
-
-	ldr	x10, [sp, #160]
-	// only the last invtable entry is zero
-	cbnz	w11, .Linvloopnext
 
 	// Final reduce
 	// w5 and w9 are 26 bits instead of 25
@@ -1635,11 +1516,11 @@ mov	v10.d[0], v0.d[1]
 	adc	x13, x13, xzr
 	and	x13, x13, 0x7fffffffffffffff
 
-	ldr	x17, [sp, #168] // outptr
+	ldr	x17, [sp, #152] // outptr
 	stp	x10, x11, [x17] // todo: fix for unaligned store
 	stp	x12, x13, [x17, #16]
 
-	// Wipe T0-T3
+	// wipe the stack frame up to sp+143
 	stp	xzr, xzr, [sp]
 	stp	xzr, xzr, [sp, #16]
 	stp	xzr, xzr, [sp, #32]
@@ -1649,9 +1530,8 @@ mov	v10.d[0], v0.d[1]
 	stp	xzr, xzr, [sp, #96]
 	stp	xzr, xzr, [sp, #112]
 	stp	xzr, xzr, [sp, #128]
-	stp	xzr, xzr, [sp, #144]
 
-	// Wipe the unreduced result
+	// wipe the caller-saved general purpose registers
 	mov	x0, xzr
 	mov	x1, xzr
 	mov	x2, xzr
@@ -1662,11 +1542,53 @@ mov	v10.d[0], v0.d[1]
 	mov	x7, xzr
 	mov	x8, xzr
 	mov	x9, xzr
+	mov	x10, xzr
+	mov	x11, xzr
+	mov	x12, xzr
+	mov	x13, xzr
 	mov	x14, xzr
 	mov	x15, xzr
 	mov	x16, xzr
+	mov	x17, xzr
 
-	add sp, sp, 176
+	// wipe all vector registers
+	movi	v0.2d, #0
+	movi	v1.2d, #0
+	movi	v2.2d, #0
+	movi	v3.2d, #0
+	movi	v4.2d, #0
+	movi	v5.2d, #0
+	movi	v6.2d, #0
+	movi	v7.2d, #0
+	movi	v8.2d, #0
+	movi	v9.2d, #0
+	movi	v10.2d, #0
+	movi	v11.2d, #0
+	movi	v12.2d, #0
+	movi	v13.2d, #0
+	movi	v14.2d, #0
+	movi	v15.2d, #0
+	movi	v16.2d, #0
+	movi	v17.2d, #0
+	movi	v18.2d, #0
+	movi	v19.2d, #0
+	movi	v20.2d, #0
+	movi	v21.2d, #0
+	movi	v22.2d, #0
+	movi	v23.2d, #0
+	movi	v24.2d, #0
+	movi	v25.2d, #0
+	movi	v26.2d, #0
+	movi	v27.2d, #0
+	movi	v28.2d, #0
+	movi	v29.2d, #0
+	movi	v30.2d, #0
+	movi	v31.2d, #0
+
+	// wipe flags
+	cmp	xzr, xzr
+
+	add sp, sp, 160
 
 	ldp	x19, x20, [sp, #16]
 	ldp	x21, x22, [sp, #32]
@@ -1684,34 +1606,7 @@ mov	v10.d[0], v0.d[1]
 	.size	DECL(mx25519_scalarmult_arm64), .-DECL(mx25519_scalarmult_arm64)
 #endif
 
-#if defined(__APPLE__)
-	.section	__TEXT,__const
-#elif defined(_WIN32)
-	.section	.rdata,"dr"
-#else
-	.section	.rodata
-#endif
-	.align	1
-	//.type	invtable, %object
-invtable:
-	//    	square times,
-	//    	    skip mul,
-	//    	           mulsource,
-	//    	                  dest
-	.hword	  1|(1<<8)       |(1<<11)
-	.hword	  2|       (2<<9)|(2<<11)
-	.hword	  0|       (1<<9)|(1<<11)
-	.hword	  1|       (2<<9)|(2<<11)
-	.hword	  5|       (2<<9)|(2<<11)
-	.hword	 10|       (2<<9)|(3<<11)
-	.hword	 20|       (3<<9)
-	.hword	 10|       (2<<9)|(2<<11)
-	.hword	 50|       (2<<9)|(3<<11)
-	.hword	100|       (3<<9)
-	.hword	 50|       (2<<9)
-	.hword	  5|       (1<<9)
-	.hword	  0|       (0<<9)
-	//.size	invtable, .-invtable
+#include "inverse.inc"
 
 #if defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
