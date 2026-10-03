@@ -180,9 +180,8 @@ DECL(mx25519_scalarmult_arm64):
 	mov	x0, #0x07fffffc
 	movk	x0, #0xfffe, lsl #32
 	movk	x0, #0x07ff, lsl #48
-	stp	x0, x0, [sp]
 	sub	x1, x0, #0xfc-0xb4
-	stp	x1, x0, [sp, #8]
+	stp	x0, x1, [sp]
 	mov	x1, #(121666 & 0xffff)
 	movk	x1, #(121666 >> 16), lsl #16
 	str	x1, [sp, #144]
@@ -1153,11 +1152,10 @@ DECL(mx25519_scalarmult_arm64):
 	and	v22.16b, v22.16b, v30.16b
 	ldr	w1, [x4, w1, sxtw #2]
 	trn1	v11.4s, v20.4s, v21.4s
-	and	w4, w0, #0x1f
 trn1	v13.4s, v22.4s, v23.4s
 		and	x7, x7, #0x3ffffff
 trn1	v15.4s, v24.4s, v25.4s
-	lsr	w1, w1, w4
+	lsr	w1, w1, w0
 trn1	v17.4s, v26.4s, v27.4s
 		bfi	x7, x6, #32, #26
 mov	v10.d[0], v0.d[1]
@@ -1268,7 +1266,6 @@ mov	v10.d[0], v0.d[1]
 	add	x4, x4, x3, lsr #25
 	and	x3, x3, #0x1ffffff
 	add	x5, x5, x4, lsr #26
-	and	x4, x4, #0x3ffffff
 	add	x6, x6, x5, lsr #25
 	and	x5, x5, #0x1ffffff
 	add	x7, x7, x6, lsr #26
@@ -1468,8 +1465,6 @@ mov	v10.d[0], v0.d[1]
 	add	x4, x7, x3, lsr #25
 	and	x3, x3, #0x1ffffff
 	add	x5, x6, x4, lsr #26
-	and	x4, x4, #0x3ffffff
-	and	x5, x5, #0x3ffffff
 
 	mov	w6, w24
 	lsr	x7, x24, #32

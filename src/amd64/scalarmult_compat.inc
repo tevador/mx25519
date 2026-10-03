@@ -108,7 +108,6 @@ sub    r8, qword ptr [p0+REG_REL]
 sbb    r9, qword ptr [p12+REG_REL]
 sbb    r10, qword ptr [p12+REG_REL]
 sbb    r11, qword ptr [p3+REG_REL]
-bt     r11, 63
 cmovb  r8, rbx
 cmovb  r9, rcx
 cmovb  r10, rdx
@@ -157,6 +156,7 @@ mov    byte ptr [rsp+354], cl
 ;#
 ;# Reduction ideas for addition and subtraction are taken from the 64-bit implementation
 ;# "amd64-64" of the work "https://link.springer.com/article/10.1007/s13389-012-0027-1"
+;# Every addition and subtraction input is below 2^255 + 2^23, so one correction by 38 suffices
 ;#
 ;# T1 ← X2 + Z2
 ;# T2 ← X2 - Z2
@@ -211,12 +211,6 @@ mov    rcx, 38
 cmovae rcx, rdi
 
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-
-cmovb  rdi, rcx
-add    r8, rdi
 
 mov    qword ptr [rsp+0], r8
 mov    qword ptr [rsp+8], r9
@@ -228,15 +222,12 @@ sub    rax, qword ptr [rsp+224]
 sbb    rbx, qword ptr [rsp+232]
 sbb    rbp, qword ptr [rsp+240]
 sbb    rsi, qword ptr [rsp+248]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, rdi
 sbb    rbp, rdi
 sbb    rsi, rdi
-cmovb  rdi, rcx
-sub    rax, rdi
 mov    qword ptr [rsp+32], rax
 mov    qword ptr [rsp+40], rbx
 mov    qword ptr [rsp+48], rbp
@@ -259,15 +250,9 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-cmovb  rdi, rcx
-add    r8, rdi
 mov    qword ptr [rsp+64], r8
 mov    qword ptr [rsp+72], r9
 mov    qword ptr [rsp+80], r10
@@ -278,15 +263,12 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, rdi
 sbb    rbp, rdi
 sbb    rsi, rdi
-cmovb  rdi, rcx
-sub    rax, rdi
 mov    qword ptr [rsp+96], rax
 mov    qword ptr [rsp+104], rbx
 mov    qword ptr [rsp+112], rbp
@@ -862,11 +844,6 @@ mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 add    r8, rdx
-adc    r9, rax
-adc    r10, rax
-adc    r11, rax
-cmovb  rax, rdx
-add    r8, rax
 mov    qword ptr [rsp+192], r8
 mov    qword ptr [rsp+200], r9
 mov    qword ptr [rsp+208], r10
@@ -877,15 +854,12 @@ sub    rbx, qword ptr [rsp+256]
 sbb    rbp, qword ptr [rsp+264]
 sbb    rcx, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 sub    rbx, rdx
 sbb    rbp, rax
 sbb    rcx, rax
 sbb    rsi, rax
-cmovb  rax, rdx
-sub    rbx, rax
 
 ;# Z3 ← Z3^2
 mov    rax, rsi
@@ -1149,8 +1123,6 @@ sub    rbx, rdx
 sbb    rbp, rax
 sbb    rcx, rax
 sbb    rsi, rax
-cmovb  rax, rdx
-sub    rbx, rax
 mov    qword ptr [rsp+64], rbx
 mov    qword ptr [rsp+72], rbp
 mov    qword ptr [rsp+80], rcx
@@ -1195,11 +1167,6 @@ mov    eax, 0
 mov    rdx, 38
 cmovae rdx, rax
 add    rbx, rdx
-adc    rbp, rax
-adc    rcx, rax
-adc    rsi, rax
-cmovb  rax, rdx
-add    rbx, rax
 mov    qword ptr [rsp+96], rbx
 mov    qword ptr [rsp+104], rbp
 mov    qword ptr [rsp+112], rcx
@@ -1235,7 +1202,6 @@ mul    qword ptr [rsp+48]
 add    r10, rax
 adc    r11, 0
 add    r12, rdx
-adc    r13, 0
 mov    rax, 38
 mul    r10
 imul   r11, r11, 38
@@ -1503,7 +1469,6 @@ mul    qword ptr [rsp+272]
 add    r10, rax
 adc    r11, 0
 add    r12, rdx
-adc    r13, 0
 mov    rax, 38
 mul    r10
 imul   r11, r11, 38
@@ -1610,7 +1575,7 @@ mov    qword ptr [rsp+280], r14
 movzx  ecx, byte ptr [rsp+352]
 sub    ecx, 1
 mov    byte ptr [rsp+352], cl
-;cmp    cl, 0
+;# cmp    cl, 0
 jge    loop_bit
 
 mov    byte ptr [rsp+352], 7
@@ -1618,7 +1583,7 @@ mov    rsi, qword ptr [rsp+312]
 mov    eax, dword ptr [rsp+356]
 sub    eax, 1
 mov    dword ptr [rsp+356], eax
-;cmp    eax, 0
+;# cmp    eax, 0
 jge    loop_byte
 
 ;# remove the private key byte from the stack
@@ -1826,8 +1791,7 @@ add    rbx, r15
 adc    r9, 0
 adc    r10, 0
 adc    r11, 0
-mov    r8, 0
-adc    r8, 0
+xor    r8d, r8d
 shld   r8, r11, 1
 btr    r11, 63
 imul   r8, r8, 19
@@ -1881,7 +1845,6 @@ mul    qword ptr [rdi+16]
 add    r9, rax
 adc    rbp, 0
 add    r10, rdx
-adc    r13, 0
 mov    rax, 38
 mul    r9
 imul   rbp, rbp, 38
@@ -2010,13 +1973,6 @@ jb    inv_loop
 
 ;# final reduction
 
-xor    r12d, r12d
-btr    r11, 63
-adc    r12, 0
-imul   r12, r12, 19
-add    r8, r12
-adc    r9, 0
-
 mov    rax, r8
 mov    rcx, r9
 mov    rdx, r10
@@ -2025,7 +1981,6 @@ sub    r8, qword ptr [p0+REG_REL]
 sbb    r9, qword ptr [p12+REG_REL]
 sbb    r10, qword ptr [p12+REG_REL]
 sbb    r11, qword ptr [p3+REG_REL]
-bt     r11, 63
 cmovb  r8, rax
 cmovb  r9, rcx
 cmovb  r10, rdx
@@ -2065,8 +2020,6 @@ mov    qword ptr [rsp+152], rbx
 ;# restore registers
 mov    rbx, qword ptr [rsp+288]
 mov    rbp, qword ptr [rsp+296]
-;# mov    rdi, qword ptr [rsp+304]
-;# mov    rsi, qword ptr [rsp+312]
 mov    r12, qword ptr [rsp+320]
 mov    r13, qword ptr [rsp+328]
 mov    r14, qword ptr [rsp+336]

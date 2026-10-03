@@ -102,7 +102,6 @@ mov    eax, 31
 mov    byte ptr [rsp+304], 6
 mov    byte ptr [rsp+305], 0
 mov    dword ptr [rsp+312], eax
-mov    rsi, qword ptr [rsp+704]
 
 ;# load XP
 mov    r8, qword ptr [rdx]
@@ -120,7 +119,6 @@ sub    r8, qword ptr [p0+REG_REL]
 sbb    r9, qword ptr [p12+REG_REL]
 sbb    r10, qword ptr [p12+REG_REL]
 sbb    r11, qword ptr [p3+REG_REL]
-bt     r11, 63
 cmovb  r8, rbx
 cmovb  r9, rcx
 cmovb  r10, rdx
@@ -169,6 +167,7 @@ mov    byte ptr [rsp+306], cl
 ;#
 ;# Reduction ideas for addition and subtraction are taken from the 64-bit implementation
 ;# "amd64-64" of the work "https://link.springer.com/article/10.1007/s13389-012-0027-1"
+;# Every addition and subtraction input is below 2^255 + 2^23, so one correction by 38 suffices
 ;#
 ;# T1 ← X2 + Z2
 ;# T2 ← X2 - Z2
@@ -223,12 +222,6 @@ mov    rcx, 38
 cmovae rcx, rdi
 
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-
-cmovb  rdi, rcx
-add    r8, rdi
 
 mov    qword ptr [rsp+0], r8
 mov    qword ptr [rsp+8], r9
@@ -240,15 +233,12 @@ sub    rax, qword ptr [rsp+224]
 sbb    rbx, qword ptr [rsp+232]
 sbb    rbp, qword ptr [rsp+240]
 sbb    rsi, qword ptr [rsp+248]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, 0
 sbb    rbp, 0
 sbb    rsi, 0
-cmovb  rdi, rcx
-sub    rax, rdi
 mov    qword ptr [rsp+32], rax
 mov    qword ptr [rsp+40], rbx
 mov    qword ptr [rsp+48], rbp
@@ -271,15 +261,9 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-cmovb  rdi, rcx
-add    r8, rdi
 mov    qword ptr [rsp+64], r8
 mov    qword ptr [rsp+72], r9
 mov    qword ptr [rsp+80], r10
@@ -290,15 +274,12 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, 0
 sbb    rbp, 0
 sbb    rsi, 0
-cmovb  rdi, rcx
-sub    rax, rdi
 mov    qword ptr [rsp+96], rax
 mov    qword ptr [rsp+104], rbx
 mov    qword ptr [rsp+112], rbp
@@ -678,11 +659,6 @@ mov    rdi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-cmovb  rdi, rcx
-add    r8, rdi
 mov    qword ptr [rsp+192], r8
 mov    qword ptr [rsp+200], r9
 mov    qword ptr [rsp+208], r10
@@ -693,15 +669,12 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, 0
 sbb    rbp, 0
 sbb    rsi, 0
-cmovb  rdi, rcx
-sub    rax, rdi
 
 ;# Z3 ← Z3^2
 xor    r13d, r13d
@@ -867,8 +840,6 @@ sub    rax, rcx
 sbb    rbx, rbp
 sbb    rsi, rbp
 sbb    rdi, rbp
-cmovb  rbp, rcx
-sub    rax, rbp
 mov    qword ptr [rsp+64], rax
 mov    qword ptr [rsp+72], rbx
 mov    qword ptr [rsp+80], rsi
@@ -902,11 +873,6 @@ mov    ebp, 0
 mov    rcx, 38
 cmovae rcx, rbp
 add    rax, rcx
-adc    rbx, rbp
-adc    rsi, rbp
-adc    rdi, rbp
-cmovb  rbp, rcx
-add    rax, rbp
 mov    qword ptr [rsp+96], rax
 mov    qword ptr [rsp+104], rbx
 mov    qword ptr [rsp+112], rsi
@@ -1242,9 +1208,6 @@ sar rsi, 63
 btr r11, 63
 and rsi, 19
 add r8, rsi
-adc r9, 0
-adc r10, 0
-adc r11, 0
 sub r8, 19
 sbb r9, 0
 sbb r10, 0
@@ -1302,7 +1265,6 @@ mov qword ptr [rsp+304], r11
 mov rdi, -19
 xor rsi, rsi
 mov rcx, -1
-mov qword ptr [rsp], rsi
 mov qword ptr [rsp+8], rcx
 mov rcx, -1048576
 vmovupd ymm0, ymmword ptr [rdx]
@@ -2227,27 +2189,10 @@ adc rbp, rcx
 adc r9, rcx
 btr rbp, 63
 adc r9, r9
-mov rcx, r9
 mov rax, 19
 imul r9
-sar rcx, 63
 add rsi, rax
 adc rdi, rdx
-adc rbx, rcx
-adc rbp, rcx
-adc r9, rcx
-xor r9, r9
-mov rdx, -19
-mov rcx, -1
-mov r8, 9223372036854775807
-cmp rbp, 0
-cmovge rdx, r9
-cmovge rcx, r9
-cmovge r8, r9
-add rsi, rdx
-adc rdi, rcx
-adc rbx, rcx
-adc rbp, r8
 add rsi, 19
 adc rdi, 0
 adc rbx, 0
@@ -2257,9 +2202,6 @@ sar r9, 63
 btr rbp, 63
 and r9, 19
 add rsi, r9
-adc rdi, 0
-adc rbx, 0
-adc rbp, 0
 sub rsi, 19
 sbb rdi, 0
 sbb rbx, 0
@@ -2383,7 +2325,6 @@ sub    r8, qword ptr [p0+REG_REL]
 sbb    r9, qword ptr [p12+REG_REL]
 sbb    r10, qword ptr [p12+REG_REL]
 sbb    r11, qword ptr [p3+REG_REL]
-bt     r11, 63
 cmovb  r8, rax
 cmovb  r9, rcx
 cmovb  r10, rdx

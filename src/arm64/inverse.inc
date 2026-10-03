@@ -101,9 +101,6 @@
     bic    x7, x7, 0x8000000000000000
     and    x3, x3, x28
     adds   x4, x4, x3
-    adcs   x5, x5, xzr
-    adcs   x6, x6, xzr
-    adc    x7, x7, xzr
     subs   x4, x4, x28
     mov    x3, x4
     sbcs   x5, x5, xzr
@@ -157,7 +154,6 @@
     str    q10, [sp, #240]
     str    x5, [sp, #256]
     ldr    q11, [x2, #464]
-    mov    x5, #-1
     ldr    q10, [x2, #448]
     str    q11, [sp, #288]
     str    q10, [sp, #272]
@@ -181,7 +177,6 @@
     eor    x4, x4, x4
     ldr    q10, [x2, #544]
     str    q11, [sp, #384]
-    stp    x4, x5, [sp, #96]
     str    q10, [sp, #368]
     mov    x5, #0x100000
     str    x7, [sp, #384]
@@ -724,9 +719,7 @@
     add    v12.2d, v22.2d, v12.2d
     asr    x3, x11, #1
     add    v13.2d, v23.2d, v13.2d
-    tst    x11, #2
     smlal  v2.2d, v16.2s, v6.2s
-    ldr    x10, [sp, #104]
     smlal  v3.2d, v17.2s, v7.2s
     shl    v8.2d, v8.2d, #15
     shl    v9.2d, v9.2d, #15
@@ -1058,7 +1051,6 @@
     umull x2, w14, w12
     add x16, x13, #1048576
     umull x19, w6, w1
-    lsr x6, x7, #32
     umull x17, w7, w1
     ldr x12, [sp, #424]
     umull x6, w6, w16
@@ -1295,7 +1287,6 @@
     mov x8, x2
     adds x1, x0, x1
     asr x8, x8, #63
-    mov x5, #0x7fffffffffffffff
     adcs x12, x3, x12
     adcs x9, x8, x9
     bic x0, x19, #0x8000000000000000
@@ -1303,12 +1294,9 @@
     eor x3, x2, x2
     adcs x7, x8, x3
     adds x2, x0, x0
-    mov x8, #-19
     adc x7, x7, x7
-    mov x19, x7
     lsr x6, x7, #32
     bic x4, x0, #0x8000000000000000
-    asr x0, x19, #63
     umull x30, w28, w6
     umull x13, w28, w7
     lsr x6, x28, #32
@@ -1317,19 +1305,10 @@
     add x19, x13, x2, lsl #32
     adds x1, x19, x1
     adcs x3, x30, x12
-    adcs x2, x0, x9
-    mov x9, #-1
-    adcs x12, x0, x4
-    adc x0, x0, x7
-    eor x0, x0, x0
-    cmp x12, xzr
-    csel x13, x0, x8, ge
-    csel x8, x0, x5, ge
-    csel x5, x0, x9, ge
-    adds x7, x13, x1
-    adcs x0, x5, x3
-    adcs x13, x5, x2
-    adc x1, x8, x12
+    mov x7, x1
+    mov x0, x3
+    mov x13, x9
+    mov x1, x4
     adds x3, x28, x7
     adcs x9, x0, xzr
     adcs x2, x13, xzr
@@ -1342,7 +1321,6 @@
     adcs x12, x9, xzr
     adcs x9, x2, xzr
     ldr x0, [sp, #536]
-    adc x4, x4, xzr
     subs x1, x13, x28
     sbcs x2, x12, xzr
     stp x1, x2, [x0, #0]
