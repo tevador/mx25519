@@ -44,7 +44,7 @@
 ;# 32-byte align rsp
 mov r11, rsp
 and r11, 31
-add r11, 800 ;# the stack frame size is stored in r11
+add r11, 704 ;# the stack frame size is stored in r11
 sub rsp, r11
 
 ;# |-----------------|------------------------|----------------------|
@@ -52,11 +52,11 @@ sub rsp, r11
 ;# |-----------------|------------------------|----------------------|
 ;# | offset from rsp |       ladder           |      inversion       |
 ;# |-----------------|------------------------|----------------------|
-;# |     800         |                   alignment                   |
+;# |     704         |                   alignment                   |
 ;# |-----------------|------------------------|----------------------|
-;# |     736         | saved: rbx, rbp, rdi, r11, r12, r13, r14, r15 |
+;# |     640         | saved: rbx, rbp, rdi, r11, r12, r13, r14, r15 |
 ;# |-----------------|------------------------|----------------------|
-;# |     704         | saved: rsi             |        X2            |
+;# |     608         | saved: rsi             |        X2            |
 ;# |-----------------|------------------------|----------------------|
 ;# |     312         |   key byte index (4B)  |                      |
 ;# |-----------------|------------------------|                      |
@@ -85,24 +85,23 @@ sub rsp, r11
 ;# |       0         |          T1            |                      |
 ;# |-----------------|------------------------|----------------------|
 
-mov    qword ptr [rsp+736], rbx
-mov    qword ptr [rsp+744], rbp
-mov    qword ptr [rsp+752], rdi
-mov    qword ptr [rsp+760], r11
-mov    qword ptr [rsp+768], r12
-mov    qword ptr [rsp+776], r13
-mov    qword ptr [rsp+784], r14
-mov    qword ptr [rsp+792], r15
+mov    qword ptr [rsp+640], rbx
+mov    qword ptr [rsp+648], rbp
+mov    qword ptr [rsp+656], rdi
+mov    qword ptr [rsp+664], r11
+mov    qword ptr [rsp+672], r12
+mov    qword ptr [rsp+680], r13
+mov    qword ptr [rsp+688], r14
+mov    qword ptr [rsp+696], r15
 
 ;# save the private key address
-mov    qword ptr [rsp+704], rsi
+mov    qword ptr [rsp+608], rsi
 
 ;# starting from bit 6 of the 31st byte
 mov    eax, 31
 mov    byte ptr [rsp+304], 6
 mov    byte ptr [rsp+305], 0
 mov    dword ptr [rsp+312], eax
-mov    rsi, qword ptr [rsp+704]
 
 ;# load XP
 mov    r8, qword ptr [rdx]
@@ -120,7 +119,6 @@ sub    r8, qword ptr [p0+REG_REL]
 sbb    r9, qword ptr [p12+REG_REL]
 sbb    r10, qword ptr [p12+REG_REL]
 sbb    r11, qword ptr [p3+REG_REL]
-bt     r11, 63
 cmovb  r8, rbx
 cmovb  r9, rcx
 cmovb  r10, rdx
@@ -169,6 +167,7 @@ mov    byte ptr [rsp+306], cl
 ;#
 ;# Reduction ideas for addition and subtraction are taken from the 64-bit implementation
 ;# "amd64-64" of the work "https://link.springer.com/article/10.1007/s13389-012-0027-1"
+;# Every addition and subtraction input is below 2^255 + 2^23, so one correction by 38 suffices
 ;#
 ;# T1 ← X2 + Z2
 ;# T2 ← X2 - Z2
@@ -223,12 +222,6 @@ mov    rcx, 38
 cmovae rcx, rdi
 
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-
-cmovb  rdi, rcx
-add    r8, rdi
 
 mov    qword ptr [rsp+0], r8
 mov    qword ptr [rsp+8], r9
@@ -240,15 +233,12 @@ sub    rax, qword ptr [rsp+224]
 sbb    rbx, qword ptr [rsp+232]
 sbb    rbp, qword ptr [rsp+240]
 sbb    rsi, qword ptr [rsp+248]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, 0
 sbb    rbp, 0
 sbb    rsi, 0
-cmovb  rdi, rcx
-sub    rax, rdi
 mov    qword ptr [rsp+32], rax
 mov    qword ptr [rsp+40], rbx
 mov    qword ptr [rsp+48], rbp
@@ -271,15 +261,9 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-cmovb  rdi, rcx
-add    r8, rdi
 mov    qword ptr [rsp+64], r8
 mov    qword ptr [rsp+72], r9
 mov    qword ptr [rsp+80], r10
@@ -290,15 +274,12 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, 0
 sbb    rbp, 0
 sbb    rsi, 0
-cmovb  rdi, rcx
-sub    rax, rdi
 mov    qword ptr [rsp+96], rax
 mov    qword ptr [rsp+104], rbx
 mov    qword ptr [rsp+112], rbp
@@ -674,15 +655,9 @@ add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
 adc    r11, qword ptr [rsp+280]
-mov    rdi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 add    r8, rcx
-adc    r9, rdi
-adc    r10, rdi
-adc    r11, rdi
-cmovb  rdi, rcx
-add    r8, rdi
 mov    qword ptr [rsp+192], r8
 mov    qword ptr [rsp+200], r9
 mov    qword ptr [rsp+208], r10
@@ -693,15 +668,12 @@ sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
 sbb    rsi, qword ptr [rsp+280]
-mov    edi, 0
 mov    rcx, 38
 cmovae rcx, rdi
 sub    rax, rcx
 sbb    rbx, 0
 sbb    rbp, 0
 sbb    rsi, 0
-cmovb  rdi, rcx
-sub    rax, rdi
 
 ;# Z3 ← Z3^2
 xor    r13d, r13d
@@ -867,8 +839,6 @@ sub    rax, rcx
 sbb    rbx, rbp
 sbb    rsi, rbp
 sbb    rdi, rbp
-cmovb  rbp, rcx
-sub    rax, rbp
 mov    qword ptr [rsp+64], rax
 mov    qword ptr [rsp+72], rbx
 mov    qword ptr [rsp+80], rsi
@@ -902,11 +872,6 @@ mov    ebp, 0
 mov    rcx, 38
 cmovae rcx, rbp
 add    rax, rcx
-adc    rbx, rbp
-adc    rsi, rbp
-adc    rdi, rbp
-cmovb  rbp, rcx
-add    rax, rbp
 mov    qword ptr [rsp+96], rax
 mov    qword ptr [rsp+104], rbx
 mov    qword ptr [rsp+112], rsi
@@ -1170,15 +1135,13 @@ mov    qword ptr [rsp+280], r11
 movzx  ecx, byte ptr [rsp+304]
 sub    ecx, 1
 mov    byte ptr [rsp+304], cl
-;# cmp    cl, 0
 jge    loop_bit_x
 
 mov    byte ptr [rsp+304], 7
-mov    rsi, qword ptr [rsp+704]
+mov    rsi, qword ptr [rsp+608]
 mov    eax, dword ptr [rsp+312]
 sub    eax, 1
 mov    dword ptr [rsp+312], eax
-;# cmp    eax, 0
 jge    loop_byte_x
 
 ;# remove the private key byte from the stack
@@ -1219,10 +1182,10 @@ cmove  r10, r14
 cmove  r11, r15
 
 ;# save X2
-mov    qword ptr [rsp+704], rsi
-mov    qword ptr [rsp+712], rbp
-mov    qword ptr [rsp+720], rcx
-mov    qword ptr [rsp+728], rax
+mov    qword ptr [rsp+608], rsi
+mov    qword ptr [rsp+616], rbp
+mov    qword ptr [rsp+624], rcx
+mov    qword ptr [rsp+632], rax
 
 ;# Z2 in: r8, r9, r10, r11
 ;# begin inversion
@@ -1242,67 +1205,59 @@ sar rsi, 63
 btr r11, 63
 and rsi, 19
 add r8, rsi
-adc r9, 0
-adc r10, 0
-adc r11, 0
 sub r8, 19
 sbb r9, 0
 sbb r10, 0
 sbb r11, 0
 mov rsi, -1152921504606846976
 andn r14, rsi, r8
-vmovupd ymm0, ymmword ptr [rdx+288]
+vmovupd ymm0, ymmword ptr [rdx+224]
 vmovapd ymmword ptr [rsp+32], ymm0
 mov rax, r8
 and rax, 1073741823
 mov qword ptr [rsp+48], rax
-vmovupd ymm0, ymmword ptr [rdx+320]
+vmovupd ymm0, ymmword ptr [rdx+256]
 vmovapd ymmword ptr [rsp+64], ymm0
 mov rax, r8
 shr rax, 30
 and rax, 1073741823
 mov qword ptr [rsp+80], rax
-vmovupd ymm0, ymmword ptr [rdx+352]
 vmovapd ymmword ptr [rsp+96], ymm0
 shrd r8, r9, 60
 and r8, 1073741823
 mov qword ptr [rsp+112], r8
-vmovupd ymm0, ymmword ptr [rdx+384]
 vmovapd ymmword ptr [rsp+128], ymm0
 mov rsi, r9
 shr rsi, 26
 and rsi, 1073741823
 mov qword ptr [rsp+144], rsi
-vmovupd ymm0, ymmword ptr [rdx+416]
 vmovapd ymmword ptr [rsp+160], ymm0
 shrd r9, r10, 56
 and r9, 1073741823
 mov qword ptr [rsp+176], r9
-vmovupd ymm0, ymmword ptr [rdx+448]
 vmovapd ymmword ptr [rsp+192], ymm0
 mov rsi, r10
 shr rsi, 22
 and rsi, 1073741823
 mov qword ptr [rsp+208], rsi
-vmovupd ymm0, ymmword ptr [rdx+480]
+vmovupd ymm0, ymmword ptr [rdx+288]
 vmovapd ymmword ptr [rsp+224], ymm0
 shrd r10, r11, 52
 and r10, 1073741823
 mov qword ptr [rsp+240], r10
-vmovupd ymm0, ymmword ptr [rdx+512]
+vmovupd ymm0, ymmword ptr [rdx+320]
 vmovapd ymmword ptr [rsp+256], ymm0
 mov rsi, r11
 shr rsi, 18
 and rsi, 1073741823
 mov qword ptr [rsp+272], rsi
-vmovupd ymm0, ymmword ptr [rdx+544]
+vmovupd ymm0, ymmword ptr [rdx+352]
 vmovapd ymmword ptr [rsp+288], ymm0
 shr r11, 48
 mov qword ptr [rsp+304], r11
 mov rdi, -19
 xor rsi, rsi
 mov rcx, -1
-mov qword ptr [rsp], rsi
 mov qword ptr [rsp+8], rcx
 mov rcx, -1048576
 vmovupd ymm0, ymmword ptr [rdx]
@@ -1318,10 +1273,6 @@ vmovapd ymmword ptr [rsp+448], ymm0
 vmovupd ymm0, ymmword ptr [rdx+160]
 vmovapd ymmword ptr [rsp+480], ymm0
 vmovupd ymm0, ymmword ptr [rdx+192]
-vmovapd ymmword ptr [rsp+512], ymm0
-vmovupd ymm0, ymmword ptr [rdx+224]
-vmovapd ymmword ptr [rsp+544], ymm0
-vmovupd ymm0, ymmword ptr [rdx+256]
 mov r8, 10
 mov r10, 1152921504606846976
 xor r11, r11
@@ -1414,7 +1365,7 @@ cmovl rsi, r13
 mov r10, qword ptr [rsp+8]
 vpsubq ymm8, ymm8, ymm12
 mov r11, rax
-vpaddq ymm8, ymm8, ymmword ptr [rsp+544]
+vpaddq ymm8, ymm8, ymmword ptr [rsp+480]
 lea r12, [rax+r9]
 test rax, 1
 cmovne r10, rsi
@@ -1568,7 +1519,7 @@ cmovge r9, r11
 vpaddq ymm8, ymm12, ymm8
 cmovl rax, r12
 cmovl rsi, r13
-vmovapd ymmword ptr [rsp+640], ymm8
+vmovapd ymmword ptr [rsp+544], ymm8
 mov r10, qword ptr [rsp+8]
 mov r11, rax
 lea r12, [rax+r9]
@@ -1658,7 +1609,7 @@ cmovge r9, r11
 vpaddq ymm8, ymm13, ymm8
 cmovl rax, r12
 cmovl rsi, r13
-vmovapd ymmword ptr [rsp+672], ymm8
+vmovapd ymmword ptr [rsp+576], ymm8
 mov r10, qword ptr [rsp+8]
 mov r11, rax
 vmovapd ymm8, ymmword ptr [rsp+224]
@@ -1820,17 +1771,14 @@ cmovl rsi, r13
 _extract_init:
 mov r10, qword ptr [inv_round41+REG_REL]
 lea r11, [rax+r10]
-vmovapd ymm3, ymmword ptr [rsp+512]
 vpaddq ymm6, ymm0, ymm1
 sar r11, 42
 mov r12, rdx
 vpsrlq ymm6, ymm6, 15
 imul rdx, r11
 lea r10, [r9+r10]
-vpsubq ymm6, ymm6, ymm3
 sar r10, 42
 imul r12, r10
-vpsubq ymm1, ymm1, ymmword ptr [rsp+480]
 mov r13, qword ptr [inv_round20+REG_REL]
 lea rax, [rax+r13]
 vpand ymm4, ymm5, ymm4
@@ -1852,10 +1800,10 @@ vmovapd ymmword ptr [rsp+288], ymm1
 sar rdi, 20
 vmovapd ymmword ptr [rsp+32], ymm12
 sar rdx, 20
-mov qword ptr [rsp+608], r10
-mov qword ptr [rsp+576], r9
-mov qword ptr [rsp+592], r11
-mov qword ptr [rsp+624], rax
+mov qword ptr [rsp+528], r10
+mov qword ptr [rsp+512], r9
+mov qword ptr [rsp+520], r11
+mov qword ptr [rsp+536], rax
 mov r9, 2
 
 _loop20:
@@ -2044,28 +1992,28 @@ add rdi, r13
 add rdx, r15
 sar rdi, 20
 sar rdx, 20
-mov r13, qword ptr [rsp+576]
+mov r13, qword ptr [rsp+512]
 imul r13, rax
-mov r14, qword ptr [rsp+624]
+mov r14, qword ptr [rsp+536]
 imul r14, r11
-mov r15, qword ptr [rsp+608]
+mov r15, qword ptr [rsp+528]
 imul rax, r15
-mov rbx, qword ptr [rsp+592]
+mov rbx, qword ptr [rsp+520]
 imul r11, rbx
 imul r15, r10
 imul rbx, r12
-imul r10, qword ptr [rsp+576]
-imul r12, qword ptr [rsp+624]
+imul r10, qword ptr [rsp+512]
+imul r12, qword ptr [rsp+536]
 add r11, rax
 lea rax, [r13+r14+0]
 add r10, r12
 lea r12, [r15+rbx]
 
 _first_loop:
-mov qword ptr [rsp+608], r11
-mov qword ptr [rsp+576], rax
-mov qword ptr [rsp+592], r12
-mov qword ptr [rsp+624], r10
+mov qword ptr [rsp+528], r11
+mov qword ptr [rsp+512], rax
+mov qword ptr [rsp+520], r12
+mov qword ptr [rsp+536], r10
 jmp _loop20
 
 _lastloop:
@@ -2074,9 +2022,9 @@ lea rdx, [r10+rdi]
 sar rdx, 42
 lea r11, [rax+rdi]
 sar r11, 42
-mov rdi, qword ptr [rsp+624]
+mov rdi, qword ptr [rsp+536]
 imul rdi, r11
-mov r9, qword ptr [rsp+592]
+mov r9, qword ptr [rsp+520]
 imul r11, r9
 imul r9, rdx
 mov r12, qword ptr [inv_round20+REG_REL]
@@ -2086,21 +2034,21 @@ sar r13, 43
 lea rax, [rax+r12]
 shl rax, 22
 sar rax, 43
-mov r10, qword ptr [rsp+576]
+mov r10, qword ptr [rsp+512]
 imul r10, rax
-mov r12, qword ptr [rsp+608]
+mov r12, qword ptr [rsp+528]
 imul rax, r12
 imul r12, r13
-imul rdx, qword ptr [rsp+624]
-imul r13, qword ptr [rsp+576]
+imul rdx, qword ptr [rsp+536]
+imul r13, qword ptr [rsp+512]
 add r11, rax
 lea r10, [r10+rdi]
 add r13, rdx
 lea r12, [r12+r9]
-mov rdi, qword ptr [rsp+640]
-mov r14, qword ptr [rsp+656]
-mov r9, qword ptr [rsp+672]
-mov r15, qword ptr [rsp+688]
+mov rdi, qword ptr [rsp+544]
+mov r14, qword ptr [rsp+560]
+mov r9, qword ptr [rsp+576]
+mov r15, qword ptr [rsp+592]
 dec r8
 jne _bigloop
 shl r9, 60
@@ -2227,27 +2175,10 @@ adc rbp, rcx
 adc r9, rcx
 btr rbp, 63
 adc r9, r9
-mov rcx, r9
 mov rax, 19
 imul r9
-sar rcx, 63
 add rsi, rax
 adc rdi, rdx
-adc rbx, rcx
-adc rbp, rcx
-adc r9, rcx
-xor r9, r9
-mov rdx, -19
-mov rcx, -1
-mov r8, 9223372036854775807
-cmp rbp, 0
-cmovge rdx, r9
-cmovge rcx, r9
-cmovge r8, r9
-add rsi, rdx
-adc rdi, rcx
-adc rbx, rcx
-adc rbp, r8
 add rsi, 19
 adc rdi, 0
 adc rbx, 0
@@ -2257,9 +2188,6 @@ sar r9, 63
 btr rbp, 63
 and r9, 19
 add rsi, r9
-adc rdi, 0
-adc rbx, 0
-adc rbp, 0
 sub rsi, 19
 sbb rdi, 0
 sbb rbx, 0
@@ -2286,9 +2214,6 @@ vmovapd ymmword ptr [rsp+480], ymm0
 vmovapd ymmword ptr [rsp+512], ymm0
 vmovapd ymmword ptr [rsp+544], ymm0
 vmovapd ymmword ptr [rsp+576], ymm0
-vmovapd ymmword ptr [rsp+608], ymm0
-vmovapd ymmword ptr [rsp+640], ymm0
-vmovapd ymmword ptr [rsp+672], ymm0
 
 vzeroall
 
@@ -2296,7 +2221,7 @@ vzeroall
 ;# result ← X2 · Z2^(-1)
 
 xor     r13d, r13d
-mov     rdx, qword ptr [rsp+704]
+mov     rdx, qword ptr [rsp+608]
 mulx    r9, r8, rsi
 mulx    r10, rcx, rdi
 adcx    r9, rcx
@@ -2306,7 +2231,7 @@ mulx    r12, rcx, rbp
 adcx    r11, rcx
 adcx    r12, r13 ;# zero
 xor     r14d, r14d
-mov     rdx, qword ptr [rsp+712]
+mov     rdx, qword ptr [rsp+616]
 mulx    rax, rcx, rsi
 adcx    r9, rcx
 adox    r10, rax
@@ -2321,7 +2246,7 @@ adcx    r12, rcx
 adox    r13, rax
 adcx    r13, r14 ;# zero
 xor     r15d, r15d
-mov     rdx, qword ptr [rsp+720]
+mov     rdx, qword ptr [rsp+624]
 mulx    rax, rcx, rsi
 adcx    r10, rcx
 adox    r11, rax
@@ -2336,7 +2261,7 @@ adcx    r13, rcx
 adox    r14, rax
 adcx    r14, r15 ;# zero
 xor     eax, eax
-mov     rdx, qword ptr [rsp+728]
+mov     rdx, qword ptr [rsp+632]
 mulx    rax, rcx, rsi
 adcx    r11, rcx
 adox    r12, rax
@@ -2383,13 +2308,12 @@ sub    r8, qword ptr [p0+REG_REL]
 sbb    r9, qword ptr [p12+REG_REL]
 sbb    r10, qword ptr [p12+REG_REL]
 sbb    r11, qword ptr [p3+REG_REL]
-bt     r11, 63
 cmovb  r8, rax
 cmovb  r9, rcx
 cmovb  r10, rdx
 cmovb  r11, rsi
 
-mov    rdi, qword ptr [rsp+752]
+mov    rdi, qword ptr [rsp+656]
 
 ;# output the result
 mov    qword ptr [rdi], r8
@@ -2398,15 +2322,15 @@ mov    qword ptr [rdi+16], r10
 mov    qword ptr [rdi+24], r11
 
 ;# wipe X2 from the stack
-vmovapd ymmword ptr [rsp+704], ymm0
+vmovapd ymmword ptr [rsp+608], ymm0
 
 ;# restore registers
-mov    rbx, qword ptr [rsp+736]
-mov    rbp, qword ptr [rsp+744]
-mov    r11, qword ptr [rsp+760]
-mov    r12, qword ptr [rsp+768]
-mov    r13, qword ptr [rsp+776]
-mov    r14, qword ptr [rsp+784]
-mov    r15, qword ptr [rsp+792]
+mov    rbx, qword ptr [rsp+640]
+mov    rbp, qword ptr [rsp+648]
+mov    r11, qword ptr [rsp+664]
+mov    r12, qword ptr [rsp+672]
+mov    r13, qword ptr [rsp+680]
+mov    r14, qword ptr [rsp+688]
+mov    r15, qword ptr [rsp+696]
 
 add    rsp, r11

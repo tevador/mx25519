@@ -78,11 +78,6 @@ static const char rfc7748_shared[] = "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947
 
 static const mx25519_impl* impl;
 
-static inline void output_hex(const uint8_t* data, int length) {
-    for (int i = 0; i < length; ++i)
-        printf("%02x", data[i]);
-}
-
 static inline char parse_nibble(char hex) {
     hex &= ~0x20;
     return (hex & 0x40) ? hex - ('A' - 10) : hex & 0xf;
@@ -165,7 +160,6 @@ static void check_dh() {
 static bool test_select_auto() {
     impl = mx25519_select_impl(MX25519_TYPE_AUTO);
     assert(impl != NULL);
-    mx25519_type type = mx25519_impl_type(impl);
     return true;
 }
 

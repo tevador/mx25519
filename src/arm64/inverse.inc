@@ -40,15 +40,9 @@
     .quad    -1, 32767, -1, 32767
     .quad    678152731, 678152731, 678152731, 678152731
     .quad    0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF
-    .quad    0x200000000, 0x200000000, 0x200000000, 0x200000000
-    .quad    0x1000000000000, 0x1000000000000, 0x1000000000000, 0x1000000000000
     .quad    0x8000000000000000, 0x8000000000000000, 0x8000000000000000, 0x8000000000000000
     .quad    0x7FFFFFFE00000000, 0x7FFFFFFE00000000, 0x7FFFFFFE00000000, 0x7FFFFFFE00000000
     .quad    -19, 0, 0, 0x3ffffff8
-    .quad    0, 0, 0, 0x3fffffff
-    .quad    0, 0, 0, 0x3fffffff
-    .quad    0, 0, 0, 0x3fffffff
-    .quad    0, 0, 0, 0x3fffffff
     .quad    0, 0, 0, 0x3fffffff
     .quad    0, 0, 0, 0x250d7fff
     .quad    0, 0, 0, 0x035e50d7
@@ -75,13 +69,13 @@
     mov    x28, #19
     ldp    x4, x5, [x0, #0]
     add    x19, sp, #496
-    ldr    q11, [x2, #304]
+    ldr    q11, [x2, #240]
     mov    x10, #0x1000000000000000
     mov    x3, x7
     mov    x0, x2 /* x0 = .Lgcd_table */
     asr    x3, x3, #63
     bic    x7, x7, 0x8000000000000000
-    ldr    q10, [x2, #288]
+    ldr    q10, [x2, #224]
     mov    x8, #10
     and    x3, x3, x28
     eor    x11, x11, x11
@@ -101,9 +95,6 @@
     bic    x7, x7, 0x8000000000000000
     and    x3, x3, x28
     adds   x4, x4, x3
-    adcs   x5, x5, xzr
-    adcs   x6, x6, xzr
-    adc    x7, x7, xzr
     subs   x4, x4, x28
     mov    x3, x4
     sbcs   x5, x5, xzr
@@ -111,11 +102,11 @@
     bic    x9, x4, 0xf000000000000000
     str    x3, [sp, #128]
     sbcs   x6, x6, xzr
-    ldr    q11, [x2, #336]
+    ldr    q11, [x2, #272]
     mov    x3, x4
     lsr    x3, x3, #30
     lsr    x4, x4, #60
-    ldr    q10, [x2, #320]
+    ldr    q10, [x2, #256]
     sbc    x7, x7, xzr
     and    x3, x3, 0x3fffffff
     str    q11, [sp, #160]
@@ -123,20 +114,16 @@
     str    q10, [sp, #144]
     mov    x3, x5
     lsl    x3, x3, #4
-    ldr    q11, [x2, #368]
     orr    x4, x3, x4
-    ldr    q10, [x2, #352]
     and    x4, x4, 0x3fffffff
     mov    x3, x6
     str    q11, [sp, #192]
     lsl    x3, x3, #8
     str    q10, [sp, #176]
     str    x4, [sp, #192]
-    ldr    q11, [x2, #400]
     mov    x4, x5
     lsr    x4, x4, #26
     lsr    x5, x5, #56
-    ldr    q10, [x2, #384]
     and    x4, x4, 0x3fffffff
     orr    x5, x3, x5
     str    q11, [sp, #224]
@@ -145,43 +132,35 @@
     str    q10, [sp, #208]
     lsl    x3, x3, #12
     str    x4, [sp, #224]
-    ldr    q11, [x2, #432]
     mov    x4, x6
     lsr    x4, x4, #22
     lsr    x6, x6, #52
-    ldr    q10, [x2, #416]
     and    x4, x4, 0x3fffffff
     orr    x6, x3, x6
     str    q11, [sp, #256]
     and    x6, x6, 0x3fffffff
     str    q10, [sp, #240]
     str    x5, [sp, #256]
-    ldr    q11, [x2, #464]
-    mov    x5, #-1
-    ldr    q10, [x2, #448]
     str    q11, [sp, #288]
     str    q10, [sp, #272]
     str    x4, [sp, #288]
-    ldr    q11, [x2, #496]
+    ldr    q11, [x2, #304]
     mov    x4, x7
     lsr    x4, x4, #18
     lsr    x7, x7, #48
-    ldr    q10, [x2, #480]
     and    x4, x4, 0x3fffffff
     str    q11, [sp, #320]
     str    q10, [sp, #304]
     str    x6, [sp, #320]
-    ldr    q11, [x2, #528]
+    ldr    q11, [x2, #336]
     mov    x6, #-0x4000000000000000
-    ldr    q10, [x2, #512]
     str    q11, [sp, #352]
     str    q10, [sp, #336]
     str    x4, [sp, #352]
-    ldr    q11, [x2, #560]
+    ldr    q11, [x2, #368]
     eor    x4, x4, x4
-    ldr    q10, [x2, #544]
+    ldr    q10, [x2, #352]
     str    q11, [sp, #384]
-    stp    x4, x5, [sp, #96]
     str    q10, [sp, #368]
     mov    x5, #0x100000
     str    x7, [sp, #384]
@@ -194,8 +173,8 @@
     movk   x6, #0x0010, lsl 16
     movk   x6, #0x0200, lsl 32
     str    x6, [x19, #32]
-    ldr    q0, [x2, #256]
-    ldr    q1, [x2, #272]
+    ldr    q0, [x2, #192]
+    ldr    q1, [x2, #208]
 .Linv25519_bigloop:
 
     umull x30, w7, w13
@@ -289,7 +268,7 @@
     xtn    v17.2s, v13.2d
     xtn    v20.2s, v20.2d
     and    v15.16b, v3.16b, v11.16b
-    ldr    q30, [x0, #224]
+    ldr    q30, [x0, #160]
     smull  v17.2d, v17.2s, v8.2s
     smlal  v16.2d, v18.2s, v8.2s
     ldr    x30, [sp, #496]
@@ -314,7 +293,7 @@
     smull  v23.2d, v19.2s, v31.2s
     tst    x3, #1
     and    v22.16b, v10.16b, v22.16b
-    ldr    q31, [x0, #240]
+    ldr    q31, [x0, #176]
     xtn    v24.2s, v22.2d
     xtn    v15.2s, v15.2d
     ushr   v7.2d, v7.2d, #30
@@ -724,9 +703,7 @@
     add    v12.2d, v22.2d, v12.2d
     asr    x3, x11, #1
     add    v13.2d, v23.2d, v13.2d
-    tst    x11, #2
     smlal  v2.2d, v16.2s, v6.2s
-    ldr    x10, [sp, #104]
     smlal  v3.2d, v17.2s, v7.2s
     shl    v8.2d, v8.2d, #15
     shl    v9.2d, v9.2d, #15
@@ -760,36 +737,28 @@
 
     ldr x17, [sp, #528]
     add v31.2D, v2.2D, v0.2D
-    ldr q6, [x0, #192]
     mov x15, x2
     lsr x1, x2, #32
     lsr x14, x15, #32
     add x6, x3, x17
-    ldr q7, [x0, #208]
     asr x11, x6, #42
     add x17, x9, x17
-    add v12.2D, v3.2D, v1.2D
+    add v13.2D, v3.2D, v1.2D
     asr x10, x17, #42
-    ushr v31.2D, v31.2D, #15
+    ushr v12.2D, v31.2D, #15
     add x17, x11, #2097152
-    ushr v28.2D, v12.2D, #15
+    ushr v13.2D, v13.2D, #15
     umull x6, w1, w17
     umull x17, w2, w17
-    sub v12.2D, v31.2D, v6.2D
-    sub v13.2D, v28.2D, v7.2D
     add x1, x10, #2097152
     umull x13, w14, w1
-    ldr q31, [x0, #160]
     umull x12, w15, w1
     mov x14, x7
     add x1, x17, x6, lsl #32
-    ldr q28, [x0, #176]
     lsr x16, x14, #32
     lsr x19, x7, #32
     sub x2, x1, x2, lsl   #21
-    sub v2.2D, v2.2D, v31.2D
     add x6, x12, x13, lsl #32
-    sub v31.2D, v3.2D, v28.2D
     ldr x13, [sp, #504]
     and v8.16B, v8.16B, v10.16B
     sub x12, x6, x15, lsl   #21
@@ -797,7 +766,7 @@
     and v2.16B, v2.16B, v4.16B
     str x10, [sp, #416]
     add x17, x3, x13
-    and v3.16B, v31.16B, v5.16B
+    and v3.16B, v3.16B, v5.16B
     lsl x17, x17, #22
     ldr q28, [x0, #32]
     add x15, x9, x13
@@ -1058,7 +1027,6 @@
     umull x2, w14, w12
     add x16, x13, #1048576
     umull x19, w6, w1
-    lsr x6, x7, #32
     umull x17, w7, w1
     ldr x12, [sp, #424]
     umull x6, w6, w16
@@ -1295,7 +1263,6 @@
     mov x8, x2
     adds x1, x0, x1
     asr x8, x8, #63
-    mov x5, #0x7fffffffffffffff
     adcs x12, x3, x12
     adcs x9, x8, x9
     bic x0, x19, #0x8000000000000000
@@ -1303,12 +1270,9 @@
     eor x3, x2, x2
     adcs x7, x8, x3
     adds x2, x0, x0
-    mov x8, #-19
     adc x7, x7, x7
-    mov x19, x7
     lsr x6, x7, #32
     bic x4, x0, #0x8000000000000000
-    asr x0, x19, #63
     umull x30, w28, w6
     umull x13, w28, w7
     lsr x6, x28, #32
@@ -1316,37 +1280,20 @@
     smulh x30, x28, x7
     add x19, x13, x2, lsl #32
     adds x1, x19, x1
-    adcs x3, x30, x12
-    adcs x2, x0, x9
-    mov x9, #-1
-    adcs x12, x0, x4
-    adc x0, x0, x7
-    eor x0, x0, x0
-    cmp x12, xzr
-    csel x13, x0, x8, ge
-    csel x8, x0, x5, ge
-    csel x5, x0, x9, ge
-    adds x7, x13, x1
-    adcs x0, x5, x3
-    adcs x13, x5, x2
-    adc x1, x8, x12
-    adds x3, x28, x7
-    adcs x9, x0, xzr
-    adcs x2, x13, xzr
-    adcs x7, x1, xzr
+    adc x3, x30, x12
+    adds x1, x28, x1
+    adcs x3, x3, xzr
+    adcs x2, x9, xzr
+    adcs x7, x4, xzr
     bic x4, x7, #0x8000000000000000
-    mov x13, x7
-    asr x12, x13, #63
+    asr x12, x7, #63
     and x7, x12, x28
-    adds x13, x7, x3
-    adcs x12, x9, xzr
-    adcs x9, x2, xzr
+    adds x13, x7, x1
     ldr x0, [sp, #536]
-    adc x4, x4, xzr
     subs x1, x13, x28
-    sbcs x2, x12, xzr
-    stp x1, x2, [x0, #0]
-    sbcs x3, x9, xzr
+    sbcs x12, x3, xzr
+    stp x1, x12, [x0, #0]
+    sbcs x3, x2, xzr
     sbc x4, x4, xzr
     stp x3, x4, [x0, #16]
     ldp    x29, x30, [sp, #80]
