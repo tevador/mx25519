@@ -11,9 +11,36 @@
 #endif
 
 #if defined(__ARM_FEATURE_BTI_DEFAULT)
-#define BTI_C bti c
+#define FEATURE_BTI 1
+#else
+#define FEATURE_BTI 0
+#endif
+
+#if defined(__ARM_FEATURE_PAC_DEFAULT) && (__ARM_FEATURE_PAC_DEFAULT & 1)
+#define SIGN_LR hint #25 // paciasp
+#define AUTH_LR hint #29 // autiasp
+#define FEATURE_PAC 2
+#elif defined(__ARM_FEATURE_PAC_DEFAULT) && (__ARM_FEATURE_PAC_DEFAULT & 2)
+#define SIGN_LR hint #27 // pacibsp
+#define AUTH_LR hint #31 // autibsp
+#define FEATURE_PAC 2
+#else
+#define SIGN_LR
+#define AUTH_LR
+#define FEATURE_PAC 0
+#endif
+
+// paciasp and pacibsp are also BTI landing pads
+#if FEATURE_BTI && !FEATURE_PAC
+#define BTI_C hint #34 // bti c
 #else
 #define BTI_C
+#endif
+
+#if defined(__ARM_FEATURE_GCS_DEFAULT)
+#define FEATURE_GCS 4
+#else
+#define FEATURE_GCS 0
 #endif
 
 /* X25519-AArch64 by Emil Lenngren (2018)
@@ -52,6 +79,7 @@
 #endif
 DECL(mx25519_scalarmult_arm64):
 	BTI_C
+	SIGN_LR
 	stp	x29, x30, [sp, #-160]!
 	mov	x29, sp
 	stp	x19, x20, [sp, #16]
@@ -1595,6 +1623,7 @@ mov	v10.d[0], v0.d[1]
 	ldp	d12, d13, [sp, #128]
 	ldp	d14, d15, [sp, #144]
 	ldp	x29, x30, [sp], #160
+	AUTH_LR
 
 	ret
 #if defined(__ELF__)
@@ -1605,7 +1634,7 @@ mov	v10.d[0], v0.d[1]
 
 #if defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
-#if defined(__ARM_FEATURE_BTI_DEFAULT)
+#if FEATURE_BTI | FEATURE_PAC | FEATURE_GCS
 .section .note.gnu.property,"a"
 .align 3
 .long 1f - 0f
@@ -1615,7 +1644,7 @@ mov	v10.d[0], v0.d[1]
 1: .align 3
 .long 0xc0000000
 .long 3f - 2f
-2: .long 1
+2: .long FEATURE_BTI | FEATURE_PAC | FEATURE_GCS
 3: .align 3
 4:
 #endif
