@@ -26,6 +26,14 @@
 #define PAGEOFF(x) :lo12:x
 #endif
 
+#ifndef SIGN_LR
+#define SIGN_LR
+#endif
+
+#ifndef AUTH_LR
+#define AUTH_LR
+#endif
+
 #if defined(__APPLE__)
     .section __TEXT,__const
 #elif defined(_WIN32)
@@ -53,6 +61,7 @@
 
 .Linv25519:
 
+    SIGN_LR
     sub    sp, sp, #544
     stp    d8, d9, [sp, #0]
     stp    d10, d11, [sp, #16]
@@ -1312,4 +1321,5 @@
     cmp    x0, x1
     b.ne    .Linv25519_wipe
     add    sp, sp, #544
+    AUTH_LR
     ret
