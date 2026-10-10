@@ -1992,6 +1992,16 @@ mov    qword ptr [rdi+8], r9
 mov    qword ptr [rdi+16], r10
 mov    qword ptr [rdi+24], r11
 
+;# wipe the result from the registers
+xor    eax, eax
+xor    ecx, ecx
+xor    edx, edx
+xor    esi, esi
+xor    r8d, r8d
+xor    r9d, r9d
+xor    r10d, r10d
+xor    r11d, r11d
+
 ;# wipe T0, T1, T2, T3, T4 from the stack
 xor    ebx, ebx
 mov    qword ptr [rsp+0], rbx

@@ -2321,6 +2321,15 @@ mov    qword ptr [rdi+8], r9
 mov    qword ptr [rdi+16], r10
 mov    qword ptr [rdi+24], r11
 
+;# wipe the result from the registers
+xor    eax, eax
+xor    ecx, ecx
+xor    edx, edx
+xor    esi, esi
+xor    r8d, r8d
+xor    r9d, r9d
+xor    r10d, r10d
+
 ;# wipe X2 from the stack
 vmovapd ymmword ptr [rsp+608], ymm0
 
