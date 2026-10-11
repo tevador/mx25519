@@ -696,7 +696,7 @@ static NOINLINE void fe_mul(fe h, fe f, fe g)
     /* |h3| <= 2^24; from now on fits into int32 unchanged */
     /* |h7| <= 2^24; from now on fits into int32 unchanged */
     /* |h4| <= 1.52*2^33 */
-    /* |h8| <= 1.52*2^33 */
+    /* |h8| <= 1.25*2^56 */
 
     carry4 = (h4 + (int64_t)(1 << 25)) >> 26; h5 += carry4; h4 -= carry4 * ((int64_t)1 << 26);
     carry8 = (h8 + (int64_t)(1 << 25)) >> 26; h9 += carry8; h8 -= carry8 * ((int64_t)1 << 26);

@@ -28,7 +28,7 @@
 #pragma warning(disable: 4146) /* unary minus applied to unsigned type */
 #endif
 
-/* current value of a hardware timer */
+/* current value of a timer */
 uint64_t mx25519_cpu_cycles(void);
 
 /* time in seconds from a fixed point in the past */

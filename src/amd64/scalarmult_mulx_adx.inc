@@ -97,7 +97,7 @@ mov    qword ptr [rsp+696], r15
 ;# save the private key address
 mov    qword ptr [rsp+608], rsi
 
-;# starting from bit 6 of the 31st byte
+;# starting from bit 6 of byte 31
 mov    eax, 31
 mov    byte ptr [rsp+304], 6
 mov    byte ptr [rsp+305], 0
@@ -109,7 +109,7 @@ mov    r9, qword ptr [rdx+8]
 mov    r10, qword ptr [rdx+16]
 mov    r11, qword ptr [rdx+24]
 
-;# reduce XP mod 2^255-19
+;# mask and reduce XP
 btr    r11, 63
 mov    rbx, r8
 mov    rcx, r9
@@ -184,8 +184,7 @@ mov    byte ptr [rsp+306], cl
 ;#
 ;# T2 ← T2^2
 ;# T1 ← T1^2
-;# X3 ← X3 + Z3
-;# Z3 ← X3 - Z3
+;# X3, Z3 ← X3 + Z3, X3 - Z3
 ;# Z3 ← Z3^2
 ;# X3 ← X3^2
 ;# T3 ← T1 - T2
@@ -650,7 +649,7 @@ mov    rbx, r9
 mov    rbp, r10
 mov    rsi, r11
 
-;# X3 ← X3 + Z3
+;# X3, Z3 ← X3 + Z3, X3 - Z3
 add    r8, qword ptr [rsp+256]
 adc    r9, qword ptr [rsp+264]
 adc    r10, qword ptr [rsp+272]
@@ -663,7 +662,6 @@ mov    qword ptr [rsp+200], r9
 mov    qword ptr [rsp+208], r10
 mov    qword ptr [rsp+216], r11
 
-;# Z3 ← X3 - Z3
 sub    rax, qword ptr [rsp+256]
 sbb    rbx, qword ptr [rsp+264]
 sbb    rbp, qword ptr [rsp+272]
@@ -1148,7 +1146,7 @@ jge    loop_byte_x
 mov    byte ptr [rsp+306], 0
 
 ;# load select, AKA the LSB, then remove
-;# needed to support privkeys wth unclamped LSB
+;# needed to support privkeys with unclamped LSB
 mov bl, byte ptr [rsp+305]
 mov byte ptr [rsp+305], 0
 cmp bl, 1

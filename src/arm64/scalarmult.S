@@ -55,10 +55,6 @@
 
 /*
  * This is an AArch64 implementation of X25519.
- * It follows the reference implementation where the representation of
- * a field element [0..2^255-19) is represented by a 256-bit little endian integer,
- * reduced modulo 2^256-38, and may possibly be in the range [2^256-38..2^256).
- * The scalar is a 256-bit integer where certain bits are hardcoded per specification.
  *
  * The implementation runs in constant time (~137k cycles on Cortex-A53),
  * and no conditional branches or memory access pattern depend on secret data.
@@ -1193,7 +1189,7 @@ mov	v10.d[0], v0.d[1]
 	eor	w1, w1, w3
 
 
-	// Make X4 and Z5 more compact
+	// X5 -> X3
 	mov	v12.d[0], v1.d[1]
 	mov	v14.d[0], v2.d[1]
 	mov	v16.d[0], v3.d[1]
@@ -1540,7 +1536,7 @@ mov	v10.d[0], v0.d[1]
 	and	x13, x13, 0x7fffffffffffffff
 
 	ldr	x17, [sp, #152] // outptr
-	stp	x10, x11, [x17] // todo: fix for unaligned store
+	stp	x10, x11, [x17]
 	stp	x12, x13, [x17, #16]
 
 	// wipe the stack frame up to sp+143
