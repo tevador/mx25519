@@ -1,7 +1,8 @@
-/* Copyright (c) 2021-2022 tevador <tevador@gmail.com>
+/* Copyright (c) 2021-2026 tevador <tevador@gmail.com>
  *
- * This file is part of mx25519, which is released under LGPLv3.
- * See LICENSE for full license details.
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
 #if defined(__APPLE__)

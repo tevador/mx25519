@@ -1,7 +1,16 @@
-/* Copyright (c) 2022 tevador <tevador@gmail.com>
+/* Copyright (c) 2022-2026 tevador <tevador@gmail.com>
  *
- * This file is part of mx25519, which is released under LGPLv3.
- * See LICENSE for full license details.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
 */
 
 #include <mx25519.h>
@@ -22,21 +31,21 @@ static bool impl_supported(mx25519_type impl) {
         return true;
     }
     if (impl == MX25519_TYPE_ARM64) {
-#if defined(PLATFORM_ARM64)
+#if defined(IMPL_ARM64)
         return true;
 #else
         return false;
 #endif
     }
     if (impl == MX25519_TYPE_AMD64) {
-#if defined(PLATFORM_AMD64)
+#if defined(IMPL_AMD64)
         return true;
 #else
         return false;
 #endif
     }
     if (impl == MX25519_TYPE_AMD64X) {
-#if defined(PLATFORM_AMD64)
+#if defined(IMPL_AMD64)
         x25519_cpu_cap cap = mx25519_get_cpu_cap();
         return (cap & X25519_CPU_CAP_BMI1) != 0
             && (cap & X25519_CPU_CAP_MULX) != 0
@@ -50,12 +59,12 @@ static bool impl_supported(mx25519_type impl) {
 }
 
 static mx25519_type select_best_impl(void) {
-#if defined(PLATFORM_AMD64)
+#if defined(IMPL_AMD64)
     if (impl_supported(MX25519_TYPE_AMD64X)) {
         return MX25519_TYPE_AMD64X;
     }
     return MX25519_TYPE_AMD64;
-#elif defined(PLATFORM_ARM64)
+#elif defined(IMPL_ARM64)
     return MX25519_TYPE_ARM64;
 #else
     return MX25519_TYPE_PORTABLE;
