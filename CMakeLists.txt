@@ -90,7 +90,7 @@ set_property(TARGET mx25519_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET mx25519_static PROPERTY PUBLIC_HEADER include/mx25519.h)
 target_include_directories(mx25519_static
   PUBLIC include/)
-set_target_properties(mx25519_static PROPERTIES OUTPUT_NAME mx25519)
+set_target_properties(mx25519_static PROPERTIES OUTPUT_NAME mx25519 PREFIX lib)
 target_compile_definitions(mx25519_static PUBLIC MX25519_STATIC)
 
 if(NOT MX25519_COPYLEFT)
