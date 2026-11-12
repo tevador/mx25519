@@ -31,4 +31,6 @@ typedef struct mx25519_impl {
 
 extern MX25519_PRIVATE const mx25519_impl* const mx25519_impls[4];
 
+extern MX25519_PRIVATE const mx25519_impl* const mx25519_impls_dit[2];
+
 #endif

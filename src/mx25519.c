@@ -95,6 +95,11 @@ const mx25519_impl* mx25519_select_impl(mx25519_type type)
         return NULL;
     }
     assert(type >= 0 && type < 4);
+#ifdef PLATFORM_DIT
+    if (type <= MX25519_TYPE_ARM64 && (mx25519_get_cpu_cap() & X25519_CPU_CAP_DIT) != 0) {
+        return mx25519_impls_dit[type];
+    }
+#endif
     return mx25519_impls[type];
 }
 
