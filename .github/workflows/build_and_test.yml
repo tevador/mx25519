@@ -69,7 +69,10 @@ jobs:
                 build-essential cmake &&
               cmake -S . -B build &&
               cmake --build build &&
-              ./build/mx25519-tests
+              ./build/mx25519-tests &&
+              if [ ${{ matrix.arch }} = arm64 ]; then
+                QEMU_CPU=cortex-a53 ./build/mx25519-tests;
+              fi
             "
 
   macos:

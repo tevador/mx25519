@@ -38,6 +38,10 @@
 #endif
 #endif
 
+#if defined(PLATFORM_ARM64) && (defined(__linux__) || defined(__APPLE__))
+#define PLATFORM_DIT
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(error: 4013) /* calls to undefined functions */
 #pragma warning(error: 4090) /* different const qualifiers */
