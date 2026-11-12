@@ -1,3 +1,5 @@
+# mx25519
+
 This library provides four constant-time implementations of scalar multiplication on Curve25519:
 
 1. **PORTABLE** is a portable C-language implementation. It uses 25.5-bit limbs.
@@ -19,29 +21,30 @@ cd build
 cmake ..
 make
 ```
+
 ```
 ./mx25519-tests
 ./mx25519-bench
 ```
 
-On Windows, building with Visual Studio is also supported.
+On Windows x86 and x64, building with Visual Studio is also supported.
 
 ## Performance
 
 Tested on AMD Ryzen 7 3700X (Turbo disabled):
 
 | implementation | cycles per scalar mult. |
-|----------------|-------------------------|
-| PORTABLE       |   330 300               |
-| AMD64          |   125 300               |
-| AMD64X         |    94 600               |
+| -------------- | ----------------------- |
+| PORTABLE       | 330 300                 |
+| AMD64          | 125 300                 |
+| AMD64X         | 94 600                  |
 
 Tested on ARM Cortex-A53:
 
 | implementation | cycles per scalar mult. |
-|----------------|-------------------------|
-| PORTABLE       |   524 900               |
-| ARM64          |   137 300               |
+| -------------- | ----------------------- |
+| PORTABLE       | 524 900                 |
+| ARM64          | 137 300                 |
 
 ## Security
 
