@@ -14,6 +14,7 @@
 */
 
 #include "platform.h"
+#include "impl.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -32,9 +33,16 @@ static const mx25519_privkey test_key = { {
     102, 66, 236, 240, 6, 149, 92, 7, 43, 107, 163, 255, 64, 145, 5, 203,
     230, 54, 147, 234, 197, 5, 215, 214, 124, 189, 226, 219, 235, 71, 20, 254 } };
 
-double bench_impl(mx25519_type type) {
-    const mx25519_impl* impl = mx25519_select_impl(type);
+static const mx25519_impl* select_plain(mx25519_type type) {
+    return mx25519_select_impl(type) != NULL ? mx25519_impls[type] : NULL;
+}
 
+static const mx25519_impl* select_dit(mx25519_type type) {
+    const mx25519_impl* impl = mx25519_select_impl(type);
+    return impl != mx25519_impls[type] ? impl : NULL;
+}
+
+double bench_impl(const mx25519_impl* impl) {
     if (impl == NULL) {
         return NAN;
     }
@@ -53,19 +61,27 @@ double bench_impl(mx25519_type type) {
 }
 
 double bench_portable() {
-    return bench_impl(MX25519_TYPE_PORTABLE);
+    return bench_impl(select_plain(MX25519_TYPE_PORTABLE));
+}
+
+double bench_portable_dit() {
+    return bench_impl(select_dit(MX25519_TYPE_PORTABLE));
 }
 
 double bench_arm64() {
-    return bench_impl(MX25519_TYPE_ARM64);
+    return bench_impl(select_plain(MX25519_TYPE_ARM64));
+}
+
+double bench_arm64_dit() {
+    return bench_impl(select_dit(MX25519_TYPE_ARM64));
 }
 
 double bench_amd64() {
-    return bench_impl(MX25519_TYPE_AMD64);
+    return bench_impl(select_plain(MX25519_TYPE_AMD64));
 }
 
 double bench_amd64x() {
-    return bench_impl(MX25519_TYPE_AMD64X);
+    return bench_impl(select_plain(MX25519_TYPE_AMD64X));
 }
 
 static void run_bench(const char* name, bench_func* func) {
@@ -87,7 +103,9 @@ int main(int argc, const char* argv[]) {
     uint64_t cpu_start = mx25519_cpu_cycles();
 
     RUN_BENCH(bench_portable);
+    RUN_BENCH(bench_portable_dit);
     RUN_BENCH(bench_arm64);
+    RUN_BENCH(bench_arm64_dit);
     RUN_BENCH(bench_amd64);
     RUN_BENCH(bench_amd64x);
 

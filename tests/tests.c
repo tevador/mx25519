@@ -17,12 +17,31 @@
 #undef NDEBUG
 #endif
 
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE
+#elif defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include <mx25519.h>
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
+#if defined(__aarch64__) && (defined(__linux__) || defined(__APPLE__))
+#define TEST_DIT
+#include <signal.h>
+#include <sys/time.h>
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#include <sys/ucontext.h>
+#else
+#include <sys/auxv.h>
+#include <ucontext.h>
+#endif
+#endif
 
 typedef bool test_func();
 static int test_no = 0;
@@ -580,6 +599,77 @@ static void check_mul_base_times1() {
     assert(memcmp(&B1, &B, sizeof(B)) == 0);
 }
 
+#ifdef TEST_DIT
+static volatile sig_atomic_t dit_samples = 0;
+static volatile sig_atomic_t dit_set_samples = 0;
+
+static void sample_dit(int sig, siginfo_t* info, void* context) {
+    (void)sig;
+    (void)info;
+    const ucontext_t* uc = context;
+#ifdef __APPLE__
+    uint64_t pstate = uc->uc_mcontext->__ss.__cpsr;
+#else
+    uint64_t pstate = uc->uc_mcontext.pstate;
+#endif
+    ++dit_samples;
+    if (pstate & ((uint64_t)1 << 24)) {
+        ++dit_set_samples;
+    }
+}
+
+static void check_dit_sampled() {
+    struct sigaction sa;
+    struct sigaction old_sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = &sample_dit;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    assert(sigaction(SIGPROF, &sa, &old_sa) == 0);
+    const struct itimerval start = { { 0, 1000 }, { 0, 1000 } };
+    const struct itimerval stop = { { 0, 0 }, { 0, 0 } };
+    dit_samples = 0;
+    dit_set_samples = 0;
+    __asm__ volatile("msr s3_3_c4_c2_5, %0" : : "r"((uint64_t)0) : "memory");
+    assert(setitimer(ITIMER_PROF, &start, NULL) == 0);
+    for (int i = 0; i < 100000 && dit_samples < 32; ++i) {
+        check_mul_base_times1();
+    }
+    assert(setitimer(ITIMER_PROF, &stop, NULL) == 0);
+    assert(sigaction(SIGPROF, &old_sa, NULL) == 0);
+    assert(dit_samples >= 32);
+    assert(dit_set_samples * 2 > dit_samples);
+}
+#endif
+
+static bool check_dit() {
+#ifdef TEST_DIT
+#ifdef __APPLE__
+    int dit = 0;
+    size_t size = sizeof(dit);
+    if (sysctlbyname("hw.optional.arm.FEAT_DIT", &dit, &size, NULL, 0) != 0 || !dit) {
+        return false;
+    }
+#else
+    if (!(getauxval(AT_HWCAP) & (1 << 24))) {
+        return false;
+    }
+#endif
+    const uint64_t states[] = { (uint64_t)1 << 24, 0 };
+    for (int i = 0; i < 2; ++i) {
+        uint64_t state;
+        __asm__ volatile("msr s3_3_c4_c2_5, %0" : : "r"(states[i]) : "memory");
+        check_mul_base_times1();
+        __asm__ volatile("mrs %0, s3_3_c4_c2_5" : "=r"(state) : : "memory");
+        assert(state == states[i]);
+    }
+    check_dit_sampled();
+    return true;
+#else
+    return false;
+#endif
+}
+
 static bool test_select_auto() {
     impl = mx25519_select_impl(MX25519_TYPE_AUTO);
     assert(impl != NULL);
@@ -611,6 +701,10 @@ static bool test_dh_portable() {
 static bool test_mul_base_times1_portable() {
     check_mul_base_times1();
     return true;
+}
+
+static bool test_dit_portable() {
+    return check_dit();
 }
 
 static bool test_select_arm64() {
@@ -649,6 +743,13 @@ static bool test_mul_base_times1_arm64() {
     }
     check_mul_base_times1();
     return true;
+}
+
+static bool test_dit_arm64() {
+    if (impl == NULL) {
+        return false;
+    }
+    return check_dit();
 }
 
 static bool test_select_amd64() {
@@ -734,11 +835,13 @@ int main() {
     RUN_TEST(test_scmul_portable);
     RUN_TEST(test_dh_portable);
     RUN_TEST(test_mul_base_times1_portable);
+    RUN_TEST(test_dit_portable);
     RUN_TEST(test_select_arm64);
     RUN_TEST(test_type_arm64);
     RUN_TEST(test_scmul_arm64);
     RUN_TEST(test_dh_arm64);
     RUN_TEST(test_mul_base_times1_arm64);
+    RUN_TEST(test_dit_arm64);
     RUN_TEST(test_select_amd64);
     RUN_TEST(test_type_amd64);
     RUN_TEST(test_scmul_amd64);
