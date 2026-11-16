@@ -37,6 +37,23 @@ jobs:
           cmake --build build-san
           ./build-san/mx25519-tests
 
+  linux-i386:
+    name: Linux (386)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install multilib
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-multilib
+
+      - name: Build & test
+        run: |
+          cmake -S . -B build -DCMAKE_C_FLAGS=-m32
+          cmake --build build
+          ./build/mx25519-tests
+
   linux-emulated:
     name: Linux (${{ matrix.arch }})
     runs-on: ubuntu-latest
@@ -44,7 +61,6 @@ jobs:
       fail-fast: false
       matrix:
         arch:
-          - 386
           - arm/v7
           - arm64
           - s390x
