@@ -31,7 +31,7 @@
 #endif
 
 #if !defined(MX25519_NO_COPYLEFT)
-#if defined(PLATFORM_ARM64)
+#if defined(PLATFORM_ARM64) && !defined(__AARCH64EB__)
 #define IMPL_ARM64
 #elif defined(PLATFORM_AMD64)
 #define IMPL_AMD64
