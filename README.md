@@ -1,3 +1,5 @@
+# MX25519
+
 This library provides four constant-time implementations of scalar multiplication on Curve25519:
 
 1. **PORTABLE** is a portable C-language implementation. It uses 25.5-bit limbs.
@@ -19,12 +21,13 @@ cd build
 cmake ..
 make
 ```
+
 ```
 ./mx25519-tests
 ./mx25519-bench
 ```
 
-On Windows, building with Visual Studio is also supported.
+On Windows x86 and x64, building with Visual Studio is also supported.
 
 ## Performance
 
