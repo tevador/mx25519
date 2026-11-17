@@ -86,8 +86,7 @@ static inline void dispatch(const mx25519_impl* impl,
     impl->scmul(result->data, key->data, pt->data);
 }
 
-const mx25519_impl* mx25519_select_impl(mx25519_type type)
-{
+const mx25519_impl* mx25519_select_impl(mx25519_type type) {
     if (type == MX25519_TYPE_AUTO) {
         type = select_best_impl();
     }
@@ -103,8 +102,7 @@ const mx25519_impl* mx25519_select_impl(mx25519_type type)
     return mx25519_impls[type];
 }
 
-mx25519_type mx25519_impl_type(const mx25519_impl* impl)
-{
+mx25519_type mx25519_impl_type(const mx25519_impl* impl) {
     assert(impl != NULL);
     return impl->type;
 }

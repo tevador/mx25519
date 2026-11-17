@@ -29,7 +29,7 @@
 #include <x86intrin.h>
 #endif
 
-uint64_t mx25519_cpu_cycles() {
+uint64_t mx25519_cpu_cycles(void) {
 #if defined(PLATFORM_X86) || defined(PLATFORM_AMD64)
     /* CPUID is used only to serialize the pipeline before reading the TSC.
        Its result is checked so that the compiler cannot discard the call. */
@@ -53,7 +53,7 @@ uint64_t mx25519_cpu_cycles() {
     return clock(); /* fallback */
 }
 
-double mx25519_wall_clock() {
+double mx25519_wall_clock(void) {
 #ifdef PLATFORM_WIN
     static double freq = 0;
     if (freq == 0) {

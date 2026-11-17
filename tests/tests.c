@@ -366,7 +366,7 @@ static bool check_scmul_case(
     return false;
 }
 
-static void check_scmul_vectors() {
+static void check_scmul_vectors(void) {
     assert(impl != NULL);
     for (size_t i = 0; i < sizeof(scmul_vectors) / sizeof(scmul_vectors[0]); ++i) {
         const scmul_vector* v = &scmul_vectors[i];
@@ -421,7 +421,7 @@ static bool check_scalar_one(const uint8_t* u, const char* family, int param) {
     return check_scmul_case(label, &one, &pt, &expected);
 }
 
-static void check_field_edges() {
+static void check_field_edges(void) {
     assert(impl != NULL);
     uint8_t p[KEY_SIZE];
     hex2bin(field_p, 2 * KEY_SIZE, p);
@@ -520,7 +520,7 @@ static const char root19[] = "3b790de53594d7505e43790de53594d7505e43790de53594d7
  * With scalar 1 the ladder hands Z2 = (4u)^19 to the inversion, so the point
  * u = z^(1/19) / 4 makes the inversion see z.
  */
-static void check_inversion_edges() {
+static void check_inversion_edges(void) {
     assert(impl != NULL);
     uint8_t p[KEY_SIZE];
     hex2bin(field_p, 2 * KEY_SIZE, p);
@@ -566,13 +566,13 @@ static void check_inversion_edges() {
     }
 }
 
-static void check_scmul() {
+static void check_scmul(void) {
     check_scmul_vectors();
     check_field_edges();
     check_inversion_edges();
 }
 
-static void check_dh() {
+static void check_dh(void) {
     assert(impl != NULL);
     mx25519_privkey alice_priv, bob_priv;
     load_privkey(&alice_priv, rfc7748_alice_priv, &rfc7748_clamping);
@@ -589,7 +589,7 @@ static void check_dh() {
     assert(equals_hex(&bob_shared, rfc7748_shared));
 }
 
-static void check_mul_base_times1() {
+static void check_mul_base_times1(void) {
     assert(impl != NULL);
     const mx25519_privkey one = { .data = {1} };
     const mx25519_pubkey B = { .data = {9} };
@@ -618,7 +618,7 @@ static void sample_dit(int sig, siginfo_t* info, void* context) {
     }
 }
 
-static void check_dit_sampled() {
+static void check_dit_sampled(void) {
     struct sigaction sa;
     struct sigaction old_sa;
     memset(&sa, 0, sizeof(sa));
@@ -642,7 +642,7 @@ static void check_dit_sampled() {
 }
 #endif
 
-static bool check_dit() {
+static bool check_dit(void) {
 #ifdef TEST_DIT
 #ifdef __APPLE__
     int dit = 0;
@@ -670,49 +670,49 @@ static bool check_dit() {
 #endif
 }
 
-static bool test_select_auto() {
+static bool test_select_auto(void) {
     impl = mx25519_select_impl(MX25519_TYPE_AUTO);
     assert(impl != NULL);
     return true;
 }
 
-static bool test_select_portable() {
+static bool test_select_portable(void) {
     impl = mx25519_select_impl(MX25519_TYPE_PORTABLE);
     assert(impl != NULL);
     return true;
 }
 
-static bool test_type_portable() {
+static bool test_type_portable(void) {
     mx25519_type type = mx25519_impl_type(impl);
     assert(type == MX25519_TYPE_PORTABLE);
     return true;
 }
 
-static bool test_scmul_portable() {
+static bool test_scmul_portable(void) {
     check_scmul();
     return true;
 }
 
-static bool test_dh_portable() {
+static bool test_dh_portable(void) {
     check_dh();
     return true;
 }
 
-static bool test_mul_base_times1_portable() {
+static bool test_mul_base_times1_portable(void) {
     check_mul_base_times1();
     return true;
 }
 
-static bool test_dit_portable() {
+static bool test_dit_portable(void) {
     return check_dit();
 }
 
-static bool test_select_arm64() {
+static bool test_select_arm64(void) {
     impl = mx25519_select_impl(MX25519_TYPE_ARM64);
     return true;
 }
 
-static bool test_type_arm64() {
+static bool test_type_arm64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -721,7 +721,7 @@ static bool test_type_arm64() {
     return true;
 }
 
-static bool test_scmul_arm64() {
+static bool test_scmul_arm64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -729,7 +729,7 @@ static bool test_scmul_arm64() {
     return true;
 }
 
-static bool test_dh_arm64() {
+static bool test_dh_arm64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -737,7 +737,7 @@ static bool test_dh_arm64() {
     return true;
 }
 
-static bool test_mul_base_times1_arm64() {
+static bool test_mul_base_times1_arm64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -745,19 +745,19 @@ static bool test_mul_base_times1_arm64() {
     return true;
 }
 
-static bool test_dit_arm64() {
+static bool test_dit_arm64(void) {
     if (impl == NULL) {
         return false;
     }
     return check_dit();
 }
 
-static bool test_select_amd64() {
+static bool test_select_amd64(void) {
     impl = mx25519_select_impl(MX25519_TYPE_AMD64);
     return true;
 }
 
-static bool test_type_amd64() {
+static bool test_type_amd64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -766,7 +766,7 @@ static bool test_type_amd64() {
     return true;
 }
 
-static bool test_scmul_amd64() {
+static bool test_scmul_amd64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -774,7 +774,7 @@ static bool test_scmul_amd64() {
     return true;
 }
 
-static bool test_dh_amd64() {
+static bool test_dh_amd64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -782,7 +782,7 @@ static bool test_dh_amd64() {
     return true;
 }
 
-static bool test_mul_base_times1_amd64() {
+static bool test_mul_base_times1_amd64(void) {
     if (impl == NULL) {
         return false;
     }
@@ -790,12 +790,12 @@ static bool test_mul_base_times1_amd64() {
     return true;
 }
 
-static bool test_select_amd64x() {
+static bool test_select_amd64x(void) {
     impl = mx25519_select_impl(MX25519_TYPE_AMD64X);
     return true;
 }
 
-static bool test_type_amd64x() {
+static bool test_type_amd64x(void) {
     if (impl == NULL) {
         return false;
     }
@@ -804,7 +804,7 @@ static bool test_type_amd64x() {
     return true;
 }
 
-static bool test_scmul_amd64x() {
+static bool test_scmul_amd64x(void) {
     if (impl == NULL) {
         return false;
     }
@@ -812,7 +812,7 @@ static bool test_scmul_amd64x() {
     return true;
 }
 
-static bool test_dh_amd64x() {
+static bool test_dh_amd64x(void) {
     if (impl == NULL) {
         return false;
     }
@@ -820,7 +820,7 @@ static bool test_dh_amd64x() {
     return true;
 }
 
-static bool test_mul_base_times1_amd64x() {
+static bool test_mul_base_times1_amd64x(void) {
     if (impl == NULL) {
         return false;
     }
@@ -828,7 +828,7 @@ static bool test_mul_base_times1_amd64x() {
     return true;
 }
 
-int main() {
+int main(void) {
     RUN_TEST(test_select_auto);
     RUN_TEST(test_select_portable);
     RUN_TEST(test_type_portable);

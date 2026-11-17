@@ -45,7 +45,7 @@ static uint32_t xgetbv0(void) {
 #include <sys/auxv.h>
 #endif
 
-x25519_cpu_cap mx25519_get_cpu_cap() {
+x25519_cpu_cap mx25519_get_cpu_cap(void) {
     x25519_cpu_cap cap = 0;
 #ifdef HAVE_CPUID
     uint32_t info[4];

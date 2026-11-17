@@ -41,23 +41,22 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
-static void fe_frombytes(fe,const uint8_t *);
-static void fe_tobytes(uint8_t *,fe);
+static void fe_frombytes(fe, const uint8_t*);
+static void fe_tobytes(uint8_t*, fe);
 
-static void fe_copy(fe,fe);
+static void fe_copy(fe, fe);
 static void fe_0(fe);
 static void fe_1(fe);
-static void fe_cswap(fe,fe,unsigned int);
+static void fe_cswap(fe, fe, unsigned int);
 
-static void fe_add(fe,fe,fe);
-static void fe_sub(fe,fe,fe);
-static void fe_mul(fe,fe,fe);
-static void fe_sq(fe,fe);
-static void fe_mul121666(fe,fe);
-static void fe_invert(fe,fe);
+static void fe_add(fe, fe, fe);
+static void fe_sub(fe, fe, fe);
+static void fe_mul(fe, fe, fe);
+static void fe_sq(fe, fe);
+static void fe_mul121666(fe, fe);
+static void fe_invert(fe, fe);
 
-static uint64_t load_3(const uint8_t *in)
-{
+static uint64_t load_3(const uint8_t* in) {
   uint64_t result;
   result = (uint64_t) in[0];
   result |= ((uint64_t) in[1]) << 8;
@@ -65,8 +64,7 @@ static uint64_t load_3(const uint8_t *in)
   return result;
 }
 
-static uint64_t load_4(const uint8_t *in)
-{
+static uint64_t load_4(const uint8_t* in) {
   uint64_t result;
   result = (uint64_t) in[0];
   result |= ((uint64_t) in[1]) << 8;
@@ -75,8 +73,7 @@ static uint64_t load_4(const uint8_t *in)
   return result;
 }
 
-static void fe_frombytes(fe h,const uint8_t *s)
-{
+static void fe_frombytes(fe h, const uint8_t* s) {
   int64_t h0 = load_4(s);
   int64_t h1 = load_3(s + 4) << 6;
   int64_t h2 = load_3(s + 7) << 5;
@@ -147,8 +144,7 @@ Proof:
   so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
 */
 
-static void fe_tobytes(unsigned char *s,fe h)
-{
+static void fe_tobytes(unsigned char* s, fe h) {
   int32_t h0 = h[0];
   int32_t h1 = h[1];
   int32_t h2 = h[2];
@@ -240,8 +236,7 @@ static void fe_tobytes(unsigned char *s,fe h)
   s[31] = h9 >> 18;
 }
 
-static void fe_copy(fe h, fe f)
-{
+static void fe_copy(fe h, fe f) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -264,8 +259,7 @@ static void fe_copy(fe h, fe f)
     h[9] = f9;
 }
 
-static void fe_0(fe h)
-{
+static void fe_0(fe h) {
     h[0] = 0;
     h[1] = 0;
     h[2] = 0;
@@ -278,8 +272,7 @@ static void fe_0(fe h)
     h[9] = 0;
 }
 
-static void fe_1(fe h)
-{
+static void fe_1(fe h) {
     h[0] = 1;
     h[1] = 0;
     h[2] = 0;
@@ -299,8 +292,7 @@ replace (f,g) with (f,g) if b == 0.
 Preconditions: b in {0,1}.
 */
 
-static void fe_cswap(fe f, fe g, unsigned int b)
-{
+static void fe_cswap(fe f, fe g, unsigned int b) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -376,8 +368,7 @@ Postconditions:
    |h| bounded by 1.1*2^26,1.1*2^25,1.1*2^26,1.1*2^25,etc.
 */
 
-static void fe_add(fe h, fe f, fe g)
-{
+static void fe_add(fe h, fe f, fe g) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -432,8 +423,7 @@ Postconditions:
    |h| bounded by 1.1*2^26,1.1*2^25,1.1*2^26,1.1*2^25,etc.
 */
 
-static void fe_sub(fe h, fe f, fe g)
-{
+static void fe_sub(fe h, fe f, fe g) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -509,8 +499,7 @@ With tighter constraints on inputs can squeeze carries into int32.
 */
 
 /* must not be inlined, otherwise clang may break constant timing */
-static NOINLINE void fe_mul(fe h, fe f, fe g)
-{
+static NOINLINE void fe_mul(fe h, fe f, fe g) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -750,8 +739,7 @@ See fe_mul for discussion of implementation strategy.
 */
 
 /* must not be inlined, otherwise clang may break constant timing */
-static NOINLINE void fe_sq(fe h, fe f)
-{
+static NOINLINE void fe_sq(fe h, fe f) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -893,8 +881,7 @@ Postconditions:
    |h| bounded by 1.1*2^25,1.1*2^24,1.1*2^25,1.1*2^24,etc.
 */
 
-static void fe_mul121666(fe h, fe f)
-{
+static void fe_mul121666(fe h, fe f) {
     int32_t f0 = f[0];
     int32_t f1 = f[1];
     int32_t f2 = f[2];
@@ -950,8 +937,7 @@ static void fe_mul121666(fe h, fe f)
     h[9] = h9;
 }
 
-static void fe_invert(fe out, fe z)
-{
+static void fe_invert(fe out, fe z) {
     fe t0;
     fe t1;
     fe t2;
