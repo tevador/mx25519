@@ -91,8 +91,7 @@ static NOINLINE void scalarmult(uint8_t* q,
 #endif
 
 /* here, not on the caller: GCC skips the zeroing before a tail call */
-static NOINLINE ZERO_CALL_USED_REGS void burn_stack(void)
-{
+static NOINLINE ZERO_CALL_USED_REGS void burn_stack(void) {
     volatile uint64_t buf[512];
     size_t i;
     for (i = 0; i < sizeof(buf) / sizeof(buf[0]); ++i) {

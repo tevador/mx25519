@@ -60,27 +60,27 @@ double bench_impl(const mx25519_impl* impl) {
     return elapsed / (double)BENCH_LOOPS;
 }
 
-double bench_portable() {
+double bench_portable(void) {
     return bench_impl(select_plain(MX25519_TYPE_PORTABLE));
 }
 
-double bench_portable_dit() {
+double bench_portable_dit(void) {
     return bench_impl(select_dit(MX25519_TYPE_PORTABLE));
 }
 
-double bench_arm64() {
+double bench_arm64(void) {
     return bench_impl(select_plain(MX25519_TYPE_ARM64));
 }
 
-double bench_arm64_dit() {
+double bench_arm64_dit(void) {
     return bench_impl(select_dit(MX25519_TYPE_ARM64));
 }
 
-double bench_amd64() {
+double bench_amd64(void) {
     return bench_impl(select_plain(MX25519_TYPE_AMD64));
 }
 
-double bench_amd64x() {
+double bench_amd64x(void) {
     return bench_impl(select_plain(MX25519_TYPE_AMD64X));
 }
 
