@@ -24,6 +24,7 @@ typedef enum x25519_cpu_cap {
     X25519_CPU_CAP_MULX = 8,
     X25519_CPU_CAP_ADX = 16,
     X25519_CPU_CAP_BMI1 = 32,
+    X25519_CPU_CAP_DIT = 64,
 } x25519_cpu_cap;
 
 MX25519_PRIVATE x25519_cpu_cap mx25519_get_cpu_cap(void);
