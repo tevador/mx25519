@@ -18,11 +18,11 @@
 #include "impl.h"
 #include "platform.h"
 #include "portable/scalarmult.h"
-#ifdef IMPL_ARM64
-#include "arm64/scalarmult.h"
-#endif
 #ifdef IMPL_AMD64
-#include "amd64/scalarmult.h"
+    #include "amd64/scalarmult.h"
+#endif
+#ifdef IMPL_ARM64
+    #include "arm64/scalarmult.h"
 #endif
 
 static const mx25519_impl impl_portable = {
@@ -31,7 +31,7 @@ static const mx25519_impl impl_portable = {
 };
 
 static const mx25519_impl impl_arm64 = {
-#if defined(IMPL_ARM64)
+#ifdef IMPL_ARM64
     .scmul = &mx25519_scalarmult_arm64,
 #else
     .scmul = NULL,
@@ -61,7 +61,7 @@ const mx25519_impl* const mx25519_impls[4] = {
     &impl_portable,
     &impl_arm64,
     &impl_amd64,
-    &impl_amd64x,
+    &impl_amd64x
 };
 
 #ifdef PLATFORM_DIT
@@ -77,9 +77,9 @@ static void dit_restore(uint64_t dit) {
     __asm__ volatile("msr s3_3_c4_c2_5, %0" : : "r"(dit) : "memory");
 }
 
-static void scalarmult_portable_dit(uint8_t* q, const uint8_t* n, const uint8_t* p) {
+static void scalarmult_portable_dit(uint8_t* q, const uint8_t* e, const uint8_t* p) {
     uint64_t dit = dit_enable();
-    mx25519_scalarmult_portable(q, n, p);
+    mx25519_scalarmult_portable(q, e, p);
     dit_restore(dit);
 }
 
@@ -88,25 +88,25 @@ static const mx25519_impl impl_portable_dit = {
     .type = MX25519_TYPE_PORTABLE
 };
 
-#ifdef IMPL_ARM64
-static void scalarmult_arm64_dit(uint8_t* q, const uint8_t* n, const uint8_t* p) {
+    #ifdef IMPL_ARM64
+static void scalarmult_arm64_dit(uint8_t* q, const uint8_t* e, const uint8_t* p) {
     uint64_t dit = dit_enable();
-    mx25519_scalarmult_arm64(q, n, p);
+    mx25519_scalarmult_arm64(q, e, p);
     dit_restore(dit);
 }
-#endif
+    #endif
 
 static const mx25519_impl impl_arm64_dit = {
-#ifdef IMPL_ARM64
+    #ifdef IMPL_ARM64
     .scmul = &scalarmult_arm64_dit,
-#else
+    #else
     .scmul = NULL,
-#endif
+    #endif
     .type = MX25519_TYPE_ARM64
 };
 
 const mx25519_impl* const mx25519_impls_dit[2] = {
     &impl_portable_dit,
-    &impl_arm64_dit,
+    &impl_arm64_dit
 };
 #endif

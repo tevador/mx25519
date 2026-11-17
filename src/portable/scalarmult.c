@@ -13,13 +13,10 @@
  * limitations under the License.
 */
 
-#include "scalarmult.h"
 #include "fe.h"
+#include "scalarmult.h"
 
-static NOINLINE void scalarmult(uint8_t* q,
-    const uint8_t* e,
-    const uint8_t* p)
-{
+static NOINLINE void scalarmult(uint8_t* q, const uint8_t* e, const uint8_t* p) {
     fe x1;
     fe x2;
     fe z2;
@@ -27,7 +24,6 @@ static NOINLINE void scalarmult(uint8_t* q,
     fe z3;
     fe tmp0;
     fe tmp1;
-    int pos;
     volatile unsigned int swap;
     volatile unsigned int b;
 
@@ -38,7 +34,7 @@ static NOINLINE void scalarmult(uint8_t* q,
     fe_1(z3);
 
     swap = 0;
-    for (pos = 254; pos >= 0; --pos) {
+    for (int pos = 254; pos >= 0; --pos) {
         b = (e[pos / 8] >> (pos & 7)) & 1;
         swap ^= b;
         fe_cswap(x2, x3, swap);
@@ -80,29 +76,29 @@ static NOINLINE void scalarmult(uint8_t* q,
 /* "all", not "used": the registers to clear were set by scalarmult */
 /* outside x86 and AArch64, some compilers crash on it or reject it */
 #if defined(__i386) || defined(__x86_64__) || defined(__aarch64__)
-#if defined(__has_attribute)
-#if __has_attribute(zero_call_used_regs)
-#define ZERO_CALL_USED_REGS __attribute__((zero_call_used_regs("all")))
-#endif
-#endif
+    #ifdef __has_attribute
+        #if __has_attribute(zero_call_used_regs)
+            #define ZERO_CALL_USED_REGS __attribute__((zero_call_used_regs("all")))
+        #endif
+    #endif
 #endif
 #ifndef ZERO_CALL_USED_REGS
-#define ZERO_CALL_USED_REGS
+    #define ZERO_CALL_USED_REGS
 #endif
 
 /* here, not on the caller: GCC skips the zeroing before a tail call */
 static NOINLINE ZERO_CALL_USED_REGS void burn_stack(void) {
     volatile uint64_t buf[512];
-    size_t i;
-    for (i = 0; i < sizeof(buf) / sizeof(buf[0]); ++i) {
+    for (size_t i = 0; i < sizeof(buf) / sizeof(buf[0]); ++i) {
         buf[i] = 0;
     }
 }
 
-void mx25519_scalarmult_portable(uint8_t* q,
+void mx25519_scalarmult_portable(
+    uint8_t* q,
     const uint8_t* e,
-    const uint8_t* p)
-{
+    const uint8_t* p
+) {
     scalarmult(q, e, p);
     burn_stack();
 }

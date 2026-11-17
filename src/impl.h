@@ -20,9 +20,11 @@
 
 #include <stdint.h>
 
-typedef void scmul_func(uint8_t result[32],
+typedef void scmul_func(
+    uint8_t result[32],
     const uint8_t key[32],
-    const uint8_t base[32]);
+    const uint8_t base[32]
+);
 
 typedef struct mx25519_impl {
     scmul_func* scmul;

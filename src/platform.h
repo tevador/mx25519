@@ -19,34 +19,34 @@
 #include <stdint.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#define PLATFORM_WIN
+    #define PLATFORM_WIN
 #endif
 
 #if defined(_M_IX86) || defined(__i386)
-#define PLATFORM_X86
+    #define PLATFORM_X86
 #elif defined(_M_X64) || defined(__x86_64__)
-#define PLATFORM_AMD64
+    #define PLATFORM_AMD64
 #elif defined(_M_ARM64) || defined(__aarch64__)
-#define PLATFORM_ARM64
+    #define PLATFORM_ARM64
 #endif
 
-#if !defined(MX25519_NO_COPYLEFT)
-#if defined(PLATFORM_ARM64) && !defined(__AARCH64EB__)
-#define IMPL_ARM64
-#elif defined(PLATFORM_AMD64)
-#define IMPL_AMD64
-#endif
+#ifndef MX25519_NO_COPYLEFT
+    #if defined(PLATFORM_ARM64) && !defined(__AARCH64EB__)
+        #define IMPL_ARM64
+    #elif defined(PLATFORM_AMD64)
+        #define IMPL_AMD64
+    #endif
 #endif
 
 #if defined(PLATFORM_ARM64) && (defined(__linux__) || defined(__APPLE__))
-#define PLATFORM_DIT
+    #define PLATFORM_DIT
 #endif
 
 #ifdef _MSC_VER
-#pragma warning(error: 4013) /* calls to undefined functions */
-#pragma warning(error: 4090) /* different const qualifiers */
-#pragma warning(error: 4133) /* incompatible pointer types */
-#pragma warning(disable: 4146) /* unary minus applied to unsigned type */
+    #pragma warning(error: 4013)   /* calls to undefined functions */
+    #pragma warning(error: 4090)   /* different const qualifiers */
+    #pragma warning(error: 4133)   /* incompatible pointer types */
+    #pragma warning(disable: 4146) /* unary minus applied to unsigned type */
 #endif
 
 /* current value of a timer */

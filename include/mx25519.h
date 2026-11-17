@@ -16,8 +16,8 @@
 #ifndef MX25519_H
 #define MX25519_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /*
  * X25519 scalar (private key).
@@ -52,11 +52,11 @@ typedef enum mx25519_type {
     MX25519_TYPE_PORTABLE,  /* portable C implementation */
     MX25519_TYPE_ARM64,     /* ARM64 assembly */
     MX25519_TYPE_AMD64,     /* AMD64 assembly */
-    MX25519_TYPE_AMD64X,    /* AMD64 assembly with MULX+ADX */
+    MX25519_TYPE_AMD64X     /* AMD64 assembly with MULX+ADX */
 } mx25519_type;
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#define MX25519_WIN
+    #define MX25519_WIN
 #endif
 
 /* Shared/static library definitions */
@@ -71,11 +71,11 @@ typedef enum mx25519_type {
     #define MX25519_PRIVATE
 #else
     #ifndef MX25519_STATIC
-        #define MX25519_API __attribute__ ((visibility ("default")))
+        #define MX25519_API __attribute__((visibility("default")))
     #else
-        #define MX25519_API __attribute__ ((visibility ("hidden")))
+        #define MX25519_API __attribute__((visibility("hidden")))
     #endif
-    #define MX25519_PRIVATE __attribute__ ((visibility ("hidden")))
+    #define MX25519_PRIVATE __attribute__((visibility("hidden")))
 #endif
 
 #ifdef __cplusplus
@@ -111,8 +111,11 @@ MX25519_API mx25519_type mx25519_impl_type(const mx25519_impl* impl);
  *        Must not be NULL.
  * @param key is a pointer to the private key. Must not be NULL.
  */
-MX25519_API void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key);
+MX25519_API void mx25519_scmul_base_unclamped(
+    const mx25519_impl* impl,
+    mx25519_pubkey* result,
+    const mx25519_privkey* key
+);
 
 /*
  * Calculates x(key*P), where P is a given public key.
@@ -125,9 +128,12 @@ MX25519_API void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
  * @param key is a pointer to the private key. Must not be NULL.
  * @param p is a pointer to the base point P. Must not be NULL.
  */
-MX25519_API void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key,
-    const mx25519_pubkey* p);
+MX25519_API void mx25519_scmul_key_unclamped(
+    const mx25519_impl* impl,
+    mx25519_pubkey* result,
+    const mx25519_privkey* key,
+    const mx25519_pubkey* p
+);
 
 #ifdef __cplusplus
 }

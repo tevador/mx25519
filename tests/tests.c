@@ -14,13 +14,13 @@
 */
 
 #ifdef NDEBUG
-#undef NDEBUG
+    #undef NDEBUG
 #endif
 
 #if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
-#define _DARWIN_C_SOURCE
+    #define _DARWIN_C_SOURCE
 #elif defined(__linux__) && !defined(_GNU_SOURCE)
-#define _GNU_SOURCE
+    #define _GNU_SOURCE
 #endif
 
 #include <mx25519.h>
@@ -31,19 +31,19 @@
 #include <string.h>
 
 #if defined(__aarch64__) && (defined(__linux__) || defined(__APPLE__))
-#define TEST_DIT
-#include <signal.h>
-#include <sys/time.h>
-#ifdef __APPLE__
-#include <sys/sysctl.h>
-#include <sys/ucontext.h>
-#else
-#include <sys/auxv.h>
-#include <ucontext.h>
-#endif
+    #define TEST_DIT
+    #include <signal.h>
+    #include <sys/time.h>
+    #ifdef __APPLE__
+        #include <sys/sysctl.h>
+        #include <sys/ucontext.h>
+    #else
+        #include <sys/auxv.h>
+        #include <ucontext.h>
+    #endif
 #endif
 
-typedef bool test_func();
+typedef bool test_func(void);
 static int test_no = 0;
 
 #define RUN_TEST(x) run_test(#x, &x)
@@ -412,7 +412,7 @@ static bool check_scalar_one(const uint8_t* u, const char* family, int param) {
         param,
         (u[KEY_SIZE - 1] & 0x80) ? ", bit 255 set" : ""
     );
-    const mx25519_privkey one = { .data = {1} };
+    const mx25519_privkey one = { .data = { 1 } };
     mx25519_pubkey pt;
     memcpy(pt.data, u, KEY_SIZE);
     mx25519_pubkey expected = pt;
@@ -426,7 +426,7 @@ static void check_field_edges(void) {
     uint8_t p[KEY_SIZE];
     hex2bin(field_p, 2 * KEY_SIZE, p);
     for (int t = 0; t <= 32; ++t) {
-        uint8_t u[KEY_SIZE] = {0};
+        uint8_t u[KEY_SIZE] = { 0 };
         u[0] = (uint8_t)t;
         assert(check_scalar_one(u, "u = t, t", t));
         u[KEY_SIZE - 1] |= 0x80;
@@ -444,10 +444,10 @@ static void check_field_edges(void) {
             assert(check_scalar_one(u, "u = p+t, t", t));
         }
     }
-    uint8_t ones[KEY_SIZE] = {0};
+    uint8_t ones[KEY_SIZE] = { 0 };
     for (int k = 0; k < 255; ++k) {
         uint8_t bit = (uint8_t)(1 << (k % 8));
-        uint8_t u[KEY_SIZE] = {0};
+        uint8_t u[KEY_SIZE] = { 0 };
         u[k / 8] = bit;
         assert(check_scalar_one(u, "u = 2^k, k", k));
         ones[k / 8] |= bit;
@@ -475,7 +475,7 @@ static void gf_to_bytes(uint8_t* s, const gf a) {
 }
 
 static void gf_mul(gf r, const gf a, const gf b) {
-    uint64_t t[16] = {0};
+    uint64_t t[16] = { 0 };
     for (int i = 0; i < 8; ++i) {
         uint64_t carry = 0;
         for (int j = 0; j < 8; ++j) {
@@ -529,10 +529,10 @@ static void check_inversion_edges(void) {
     p_minus_2[0] -= 2;
     uint8_t root[KEY_SIZE];
     hex2bin(root19, 2 * KEY_SIZE, root);
-    const gf four = {4};
+    const gf four = { 4 };
     gf quarter;
     gf_pow(quarter, four, p_minus_2);
-    const uint8_t nineteen[KEY_SIZE] = {19};
+    const uint8_t nineteen[KEY_SIZE] = { 19 };
     static const char* const families[4] = {
         "Z2 = t, t",
         "Z2 = -t, t",
@@ -540,7 +540,7 @@ static void check_inversion_edges(void) {
         "Z2 = -1/t, t"
     };
     for (int t = 1; t <= 32; ++t) {
-        uint8_t bytes[KEY_SIZE] = {0};
+        uint8_t bytes[KEY_SIZE] = { 0 };
         bytes[0] = (uint8_t)t;
         gf z[4];
         gf_from_bytes(z[0], bytes);
@@ -591,8 +591,8 @@ static void check_dh(void) {
 
 static void check_mul_base_times1(void) {
     assert(impl != NULL);
-    const mx25519_privkey one = { .data = {1} };
-    const mx25519_pubkey B = { .data = {9} };
+    const mx25519_privkey one = { .data = { 1 } };
+    const mx25519_pubkey B = { .data = { 9 } };
     mx25519_pubkey B1;
     memset(&B1, 0xff, sizeof(B1));
     mx25519_scmul_base_unclamped(impl, &B1, &one);
@@ -607,11 +607,11 @@ static void sample_dit(int sig, siginfo_t* info, void* context) {
     (void)sig;
     (void)info;
     const ucontext_t* uc = context;
-#ifdef __APPLE__
+    #ifdef __APPLE__
     uint64_t pstate = uc->uc_mcontext->__ss.__cpsr;
-#else
+    #else
     uint64_t pstate = uc->uc_mcontext.pstate;
-#endif
+    #endif
     ++dit_samples;
     if (pstate & ((uint64_t)1 << 24)) {
         ++dit_set_samples;
@@ -644,17 +644,17 @@ static void check_dit_sampled(void) {
 
 static bool check_dit(void) {
 #ifdef TEST_DIT
-#ifdef __APPLE__
+    #ifdef __APPLE__
     int dit = 0;
     size_t size = sizeof(dit);
     if (sysctlbyname("hw.optional.arm.FEAT_DIT", &dit, &size, NULL, 0) != 0 || !dit) {
         return false;
     }
-#else
+    #else
     if (!(getauxval(AT_HWCAP) & (1 << 24))) {
         return false;
     }
-#endif
+    #endif
     const uint64_t states[] = { (uint64_t)1 << 24, 0 };
     for (int i = 0; i < 2; ++i) {
         uint64_t state;

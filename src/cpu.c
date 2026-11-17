@@ -14,35 +14,36 @@
 */
 
 #if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
-#define _DARWIN_C_SOURCE
+    #define _DARWIN_C_SOURCE
 #endif
 
 #include "cpu.h"
 #include "platform.h"
 
-#if defined(IMPL_AMD64)
-#define HAVE_CPUID
-#ifdef _MSC_VER
-#include <intrin.h>
-#define cpuid(info, x) __cpuidex(info, x, 0)
-#define xgetbv0() ((uint32_t)_xgetbv(0))
-#else
-#include <cpuid.h>
+#ifdef IMPL_AMD64
+    #define HAVE_CPUID
+    #ifdef _MSC_VER
+        #include <intrin.h>
+        #define cpuid(info, x) __cpuidex(info, x, 0)
+        #define xgetbv0() ((uint32_t)_xgetbv(0))
+    #else
+        #include <cpuid.h>
 static void cpuid(uint32_t info[4], uint32_t type) {
     __cpuid_count(type, 0, info[0], info[1], info[2], info[3]);
 }
+
 static uint32_t xgetbv0(void) {
     uint32_t eax, edx;
     __asm__ volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
     return eax;
 }
-#endif
+    #endif
 #endif
 
 #if defined(PLATFORM_DIT) && defined(__APPLE__)
-#include <sys/sysctl.h>
+    #include <sys/sysctl.h>
 #elif defined(PLATFORM_DIT)
-#include <sys/auxv.h>
+    #include <sys/auxv.h>
 #endif
 
 x25519_cpu_cap mx25519_get_cpu_cap(void) {
@@ -53,8 +54,11 @@ x25519_cpu_cap mx25519_get_cpu_cap(void) {
     uint32_t num_ids = info[0];
     if (num_ids >= 0x00000001) {
         cpuid(info, 0x00000001);
-        if ((info[2] & (1 << 28)) && (info[2] & (1 << 27))
-            && (xgetbv0() & 6) == 6) {
+        if (
+            (info[2] & (1 << 28))
+            && (info[2] & (1 << 27))
+            && (xgetbv0() & 6) == 6
+        ) {
             cap |= X25519_CPU_CAP_AVX;
         }
     }
