@@ -39,7 +39,6 @@
 #include <sys/ucontext.h>
 #else
 #include <sys/auxv.h>
-#include <ucontext.h>
 #endif
 #endif
 
