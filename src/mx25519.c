@@ -15,12 +15,12 @@
 
 #include <mx25519.h>
 
-#include "impl.h"
 #include "cpu.h"
+#include "impl.h"
 #include "platform.h"
 
-#include <stdbool.h>
 #include <assert.h>
+#include <stdbool.h>
 
 static const mx25519_pubkey x25519_base = {
     .data = { 9 }
@@ -31,21 +31,21 @@ static bool impl_supported(mx25519_type impl) {
         return true;
     }
     if (impl == MX25519_TYPE_ARM64) {
-#if defined(IMPL_ARM64)
+#ifdef IMPL_ARM64
         return true;
 #else
         return false;
 #endif
     }
     if (impl == MX25519_TYPE_AMD64) {
-#if defined(IMPL_AMD64)
+#ifdef IMPL_AMD64
         return true;
 #else
         return false;
 #endif
     }
     if (impl == MX25519_TYPE_AMD64X) {
-#if defined(IMPL_AMD64)
+#ifdef IMPL_AMD64
         x25519_cpu_cap cap = mx25519_get_cpu_cap();
         return (cap & X25519_CPU_CAP_BMI1) != 0
             && (cap & X25519_CPU_CAP_MULX) != 0
@@ -59,7 +59,7 @@ static bool impl_supported(mx25519_type impl) {
 }
 
 static mx25519_type select_best_impl(void) {
-#if defined(IMPL_AMD64)
+#ifdef IMPL_AMD64
     if (impl_supported(MX25519_TYPE_AMD64X)) {
         return MX25519_TYPE_AMD64X;
     }
@@ -71,26 +71,27 @@ static mx25519_type select_best_impl(void) {
 #endif
 }
 
-static inline void dispatch(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key,
-    const mx25519_pubkey* pt)
-{
+static inline void dispatch(
+    const mx25519_impl* impl,
+    mx25519_pubkey* result,
+    const mx25519_privkey* key,
+    const mx25519_pubkey* p
+) {
     assert(impl != NULL);
-    assert(pt != NULL);
+    assert(p != NULL);
     assert(key != NULL);
     assert(result != NULL);
     assert(impl->scmul != NULL);
     assert(impl->type <= MX25519_TYPE_AMD64X);
 
     /* dispatch */
-    impl->scmul(result->data, key->data, pt->data);
+    impl->scmul(result->data, key->data, p->data);
 }
 
 const mx25519_impl* mx25519_select_impl(mx25519_type type) {
     if (type == MX25519_TYPE_AUTO) {
         type = select_best_impl();
-    }
-    else if (!impl_supported(type)) {
+    } else if (!impl_supported(type)) {
         return NULL;
     }
     assert(type >= 0 && type < 4);
@@ -107,15 +108,19 @@ mx25519_type mx25519_impl_type(const mx25519_impl* impl) {
     return impl->type;
 }
 
-void mx25519_scmul_base_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key)
-{
+void mx25519_scmul_base_unclamped(
+    const mx25519_impl* impl,
+    mx25519_pubkey* result,
+    const mx25519_privkey* key
+) {
     dispatch(impl, result, key, &x25519_base);
 }
 
-void mx25519_scmul_key_unclamped(const mx25519_impl* impl,
-    mx25519_pubkey* result, const mx25519_privkey* key,
-    const mx25519_pubkey* pt)
-{
-    dispatch(impl, result, key, pt);
+void mx25519_scmul_key_unclamped(
+    const mx25519_impl* impl,
+    mx25519_pubkey* result,
+    const mx25519_privkey* key,
+    const mx25519_pubkey* p
+) {
+    dispatch(impl, result, key, p);
 }

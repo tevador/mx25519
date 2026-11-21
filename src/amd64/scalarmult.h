@@ -20,12 +20,16 @@
 
 #include <stdint.h>
 
-MX25519_PRIVATE void mx25519_scalarmult_amd64(uint8_t* q,
+MX25519_PRIVATE void mx25519_scalarmult_amd64(
+    uint8_t* q,
     const uint8_t* e,
-    const uint8_t* p);
+    const uint8_t* p
+);
 
-MX25519_PRIVATE void mx25519_scalarmult_amd64x(uint8_t* q,
+MX25519_PRIVATE void mx25519_scalarmult_amd64x(
+    uint8_t* q,
     const uint8_t* e,
-    const uint8_t* p);
+    const uint8_t* p
+);
 
 #endif

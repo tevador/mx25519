@@ -22,11 +22,13 @@ set(MX25519_VERSION 1)
 
 project(mx25519 C)
 
-set(mx25519_sources
-src/portable/scalarmult.c
-src/cpu.c
-src/impl.c
-src/mx25519.c)
+set(
+  mx25519_sources
+  src/portable/scalarmult.c
+  src/cpu.c
+  src/impl.c
+  src/mx25519.c
+)
 
 option(MX25519_COPYLEFT "Include the MPL-2.0 licensed assembly backends (ARM64, AMD64, AMD64X)" ON)
 
@@ -50,13 +52,17 @@ endif()
 message(STATUS "Build architecture: ${ARCH_ID}")
 
 if(MX25519_COPYLEFT)
-message(STATUS "Assembly backends (MPL-2.0): enabled")
+  message(STATUS "Assembly backends (MPL-2.0): enabled")
 else()
-message(STATUS "Assembly backends (MPL-2.0): disabled")
+  message(STATUS "Assembly backends (MPL-2.0): disabled")
 endif()
 
 # AMD64
-if(MX25519_COPYLEFT AND (CMAKE_SIZEOF_VOID_P EQUAL 8) AND (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "amd64"))
+if(
+  MX25519_COPYLEFT AND
+  (CMAKE_SIZEOF_VOID_P EQUAL 8) AND
+  (ARCH_ID STREQUAL "x86_64" OR ARCH_ID STREQUAL "x86-64" OR ARCH_ID STREQUAL "amd64")
+)
   if(MSVC)
     enable_language(ASM_MASM)
     list(APPEND mx25519_sources src/amd64/scalarmult_masm.asm)
@@ -80,16 +86,14 @@ set(MX25519_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE STRING "mx25519 
 add_library(mx25519 SHARED ${mx25519_sources})
 set_property(TARGET mx25519 PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET mx25519 PROPERTY PUBLIC_HEADER include/mx25519.h)
-target_include_directories(mx25519
-  PUBLIC include/)
+target_include_directories(mx25519 PUBLIC include)
 target_compile_definitions(mx25519 PRIVATE MX25519_SHARED)
 set_target_properties(mx25519 PROPERTIES SOVERSION ${MX25519_VERSION})
 
 add_library(mx25519_static STATIC ${mx25519_sources})
 set_property(TARGET mx25519_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET mx25519_static PROPERTY PUBLIC_HEADER include/mx25519.h)
-target_include_directories(mx25519_static
-  PUBLIC include/)
+target_include_directories(mx25519_static PUBLIC include)
 set_target_properties(mx25519_static PROPERTIES OUTPUT_NAME mx25519 PREFIX lib)
 target_compile_definitions(mx25519_static PUBLIC MX25519_STATIC)
 
@@ -98,18 +102,13 @@ if(NOT MX25519_COPYLEFT)
   target_compile_definitions(mx25519_static PRIVATE MX25519_NO_COPYLEFT)
 endif()
 
-add_executable(mx25519-tests
-  tests/tests.c)
+add_executable(mx25519-tests tests/tests.c)
 target_compile_definitions(mx25519-tests PRIVATE MX25519_STATIC)
-target_link_libraries(mx25519-tests
-  PRIVATE mx25519_static)
+target_link_libraries(mx25519-tests PRIVATE mx25519_static)
 set_property(TARGET mx25519-tests PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-add_executable(mx25519-bench
-  tests/bench.c
-  src/platform.c)
+add_executable(mx25519-bench tests/bench.c src/platform.c)
 target_include_directories(mx25519-bench PRIVATE src)
 target_compile_definitions(mx25519-bench PRIVATE MX25519_STATIC)
-target_link_libraries(mx25519-bench
-  PRIVATE mx25519_static)
+target_link_libraries(mx25519-bench PRIVATE mx25519_static)
 set_property(TARGET mx25519-bench PROPERTY POSITION_INDEPENDENT_CODE ON)

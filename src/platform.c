@@ -14,38 +14,41 @@
  */
 
 #include "platform.h"
+
 #include <time.h>
 
-#if defined(PLATFORM_WIN)
-#include <windows.h>
+#ifdef PLATFORM_WIN
+    #include <windows.h>
 #else
-#include <sys/time.h>
+    #include <sys/time.h>
 #endif
 
-#if defined(_MSC_VER)
-#include <intrin.h>
+#ifdef _MSC_VER
+    #include <intrin.h>
 #elif defined(PLATFORM_X86) || defined(PLATFORM_AMD64)
-#include <cpuid.h>
-#include <x86intrin.h>
+    #include <cpuid.h>
+    #include <x86intrin.h>
 #endif
 
 uint64_t mx25519_cpu_cycles(void) {
 #if defined(PLATFORM_X86) || defined(PLATFORM_AMD64)
-    /* CPUID is used only to serialize the pipeline before reading the TSC.
-       Its result is checked so that the compiler cannot discard the call. */
-#if defined(_MSC_VER)
+    /*
+     * CPUID is used only to serialize the pipeline before reading the TSC.
+     * Its result is checked so that the compiler cannot discard the call.
+     */
+    #ifdef _MSC_VER
     int info[4];
     __cpuid(info, 0);
     unsigned int max_leaf = (unsigned int)info[0];
-#else
+    #else
     unsigned int max_leaf, b, c, d;
     __cpuid(0, max_leaf, b, c, d);
-#endif
+    #endif
     if (max_leaf >= 1) {
         return __rdtsc();
     }
 #endif
-#if defined(PLATFORM_ARM64)
+#ifdef PLATFORM_ARM64
     uint64_t vct;
     __asm__ volatile("mrs %0, cntvct_el0" : "=r"(vct));
     return vct;
