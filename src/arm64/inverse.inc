@@ -27,14 +27,6 @@
 #define PAGEOFF(x) :lo12:x
 #endif
 
-#ifndef SIGN_LR
-#define SIGN_LR
-#endif
-
-#ifndef AUTH_LR
-#define AUTH_LR
-#endif
-
 #if defined(__APPLE__)
     .section __TEXT,__const
 #elif defined(_WIN32)

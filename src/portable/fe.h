@@ -41,21 +41,6 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
-static void fe_frombytes(fe, const uint8_t*);
-static void fe_tobytes(uint8_t*, fe);
-
-static void fe_copy(fe, fe);
-static void fe_0(fe);
-static void fe_1(fe);
-static void fe_cswap(fe, fe, unsigned int);
-
-static void fe_add(fe, fe, fe);
-static void fe_sub(fe, fe, fe);
-static void fe_mul(fe, fe, fe);
-static void fe_sq(fe, fe);
-static void fe_mul121666(fe, fe);
-static void fe_invert(fe, fe);
-
 static uint64_t load_3(const uint8_t* in) {
   uint64_t result;
   result = (uint64_t) in[0];
@@ -945,11 +930,11 @@ static void fe_invert(fe out, fe z) {
     int i;
 
     /* calculate z^(2^255-21) */
-    fe_sq(t0, z); for (i = 1; i < 1; ++i) fe_sq(t0, t0);
+    fe_sq(t0, z);
     fe_sq(t1, t0); for (i = 1; i < 2; ++i) fe_sq(t1, t1);
     fe_mul(t1, z, t1);
     fe_mul(t0, t0, t1);
-    fe_sq(t2, t0); for (i = 1; i < 1; ++i) fe_sq(t2, t2);
+    fe_sq(t2, t0);
     fe_mul(t1, t1, t2);
     fe_sq(t2, t1); for (i = 1; i < 5; ++i) fe_sq(t2, t2);
     fe_mul(t1, t2, t1);
